@@ -1,26 +1,40 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import filedialog, messagebox
 
 class DroneFieldGUI(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Drone Field Analyzer")
+        self.mp4_path = tk.StringVar()
+        self.srt_path = tk.StringVar()
         self.create_widgets()
 
     def create_widgets(self):
         tk.Label(self, text="Drone Field Analyzer", font=("Helvetica", 16, "bold")).grid(row=0, column=0, columnspan=3, pady=10)
 
         tk.Label(self, text="MP4 File:").grid(row=1, column=0, sticky="e", padx=5, pady=5)
-        tk.Entry(self, width=40).grid(row=1, column=1, padx=5, pady=5, columnspan=2)
+        tk.Entry(self, width=40, textvariable=self.mp4_path).grid(row=1, column=1, padx=5, pady=5)
+        tk.Button(self, text="Browse", command=self.browse_mp4).grid(row=1, column=2, padx=5, pady=5)
 
         tk.Label(self, text="SRT File:").grid(row=2, column=0, sticky="e", padx=5, pady=5)
-        tk.Entry(self, width=40).grid(row=2, column=1, padx=5, pady=5, columnspan=2)
+        tk.Entry(self, width=40, textvariable=self.srt_path).grid(row=2, column=1, padx=5, pady=5)
+        tk.Button(self, text="Browse", command=self.browse_srt).grid(row=2, column=2, padx=5, pady=5)
 
         tk.Button(self, text="Add Files", command=self.show_not_implemented).grid(row=3, column=0, columnspan=3, pady=10)
         tk.Button(self, text="Scan", command=self.show_not_implemented).grid(row=4, column=0, columnspan=3, pady=10)
 
         tk.Label(self, text="Found Elements").grid(row=5, column=0, columnspan=3)
         tk.Listbox(self, width=60, height=10).grid(row=6, column=0, columnspan=3, padx=10, pady=5)
+
+    def browse_mp4(self):
+        path = filedialog.askopenfilename(filetypes=[("MP4 files", "*.mp4")])
+        if path:
+            self.mp4_path.set(path)
+
+    def browse_srt(self):
+        path = filedialog.askopenfilename(filetypes=[("SRT files", "*.srt")])
+        if path:
+            self.srt_path.set(path)
 
     def show_not_implemented(self):
         tk.messagebox.showinfo("Not Implemented", "This functionality is not implemented yet.")
