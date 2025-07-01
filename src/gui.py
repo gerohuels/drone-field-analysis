@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
+from extract_frames import extract_frames_with_gps
+
 class DroneFieldGUI(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -21,7 +23,7 @@ class DroneFieldGUI(tk.Tk):
         tk.Button(self, text="Browse", command=self.browse_srt).grid(row=2, column=2, padx=5, pady=5)
 
         tk.Button(self, text="Add Files", command=self.show_not_implemented).grid(row=3, column=0, columnspan=3, pady=10)
-        tk.Button(self, text="Scan", command=self.show_not_implemented).grid(row=4, column=0, columnspan=3, pady=10)
+        tk.Button(self, text="Scan", command=self.scan).grid(row=4, column=0, columnspan=3, pady=10)
 
         tk.Label(self, text="Found Elements").grid(row=5, column=0, columnspan=3)
         tk.Listbox(self, width=60, height=10).grid(row=6, column=0, columnspan=3, padx=10, pady=5)
@@ -38,6 +40,20 @@ class DroneFieldGUI(tk.Tk):
 
     def show_not_implemented(self):
         tk.messagebox.showinfo("Not Implemented", "This functionality is not implemented yet.")
+
+    def scan(self):
+        mp4 = self.mp4_path.get()
+        srt = self.srt_path.get()
+        if not mp4 or not srt:
+            messagebox.showerror("Missing Files", "Please select both MP4 and SRT files before scanning.")
+            return
+
+        output_dir = "output"
+        try:
+            extract_frames_with_gps(mp4, srt, output_dir)
+            messagebox.showinfo("Scan Complete", f"Frames saved to '{output_dir}'")
+        except Exception as exc:
+            messagebox.showerror("Error", str(exc))
 
 if __name__ == "__main__":
     app = DroneFieldGUI()
