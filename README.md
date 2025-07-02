@@ -7,3 +7,13 @@ All detected objects are visualized on a field map for easy monitoring and analy
 
 ## Input files
 Place your `.mp4` video and matching `.srt` file into the `footage/` folder before running the analysis.
+
+## AI bare spot detection
+
+The `src/ai.py` script demonstrates how to analyze the extracted frames using
+the OpenAI API. A frame is sent to the `gpt-4o` model with instructions to look
+for large, clearly visible bare soil patches. If the model detects such a bare
+spot with high confidence it triggers the `report_bare_spot` function, printing
+the estimated location and confidence score.
+
+Set the `OPENAI_API_KEY` environment variable before running this script.
