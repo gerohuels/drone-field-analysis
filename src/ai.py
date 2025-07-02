@@ -2,8 +2,6 @@ import base64
 import json
 from openai import OpenAI
 
-
-
 # Initialize OpenAI client
 client = OpenAI()
 
