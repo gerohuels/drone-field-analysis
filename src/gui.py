@@ -88,9 +88,13 @@ class DroneFieldGUI(tk.Tk):
         text = f"Lat: {lat}\nLon: {lon}\n{description}"
         tk.Label(frame, text=text, justify="left", wraplength=250).pack(side="left", padx=5)
 
-        children = self.results_container.winfo_children()
-        if children:
-            frame.pack(fill="x", padx=5, pady=5, before=children[0])
+        # ``pack(before=...)`` raises ``TclError`` if the referenced widget is
+        # not currently managed by ``pack``. Using ``pack_slaves`` ensures that
+        # we only reference widgets already packed, preventing the
+        # ``isn't packed`` error reported by some users.
+        packed_children = self.results_container.pack_slaves()
+        if packed_children:
+            frame.pack(fill="x", padx=5, pady=5, before=packed_children[0])
         else:
             frame.pack(fill="x", padx=5, pady=5)
 
