@@ -2,47 +2,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 from typing import cast
 
-
-class FindingViewer(tk.Toplevel):
-    """Display findings one by one with next button."""
-
-    def __init__(self, master: tk.Misc, findings: list[dict]):
-        super().__init__(master)
-        self.title("Findings")
-        self.findings = findings
-        self.index = 0
-
-        self.image_label = tk.Label(self)
-        self.image_label.pack()
-
-        self.description_label = tk.Label(self, text="", font=("Arial", 14))
-        self.description_label.pack()
-
-        tk.Button(self, text="Next", command=self.next_image).pack()
-
-        self.show_image()
-
-    def show_image(self):
-        filename = self.findings[self.index]["filename"]
-        description = self.findings[self.index]["description"]
-        lat = self.findings[self.index]["latitude"]
-        lon = self.findings[self.index]["longitude"]
-
-        image = Image.open(filename)
-        image = image.resize((300, 300))
-        photo = cast(tk.PhotoImage, ImageTk.PhotoImage(image))
-
-        self.image_label.config(image=photo)
-        self.image_label.image = photo
-        text = f"Lat: {lat}\nLon: {lon}\n{description}"
-        self.description_label.config(text=text)
-
-    def next_image(self):
-        self.index = (self.index + 1) % len(self.findings)
-        self.show_image()
-
 from PIL import Image, ImageTk
-
 from extract_frames import extract_frames_with_gps
 from ai import analyze_frame
 
@@ -105,6 +65,22 @@ class DroneFieldGUI(tk.Tk):
     def show_not_implemented(self):
         tk.messagebox.showinfo("Not Implemented", "This functionality is not implemented yet.")
 
+    def show_full_image(self, img_path: str, description: str, lat, lon) -> None:
+        """Open a new window displaying a larger version of the image."""
+        top = tk.Toplevel(self)
+        top.title("Image Viewer")
+
+        img = Image.open(img_path)
+        img = img.resize((600, 600))
+        img_photo = cast(tk.PhotoImage, ImageTk.PhotoImage(img))
+
+        img_label = tk.Label(top, image=img_photo)
+        img_label.image = img_photo  # keep reference
+        img_label.pack()
+
+        info = f"Lat: {lat}\nLon: {lon}\n{description}"
+        tk.Label(top, text=info, font=("Arial", 12)).pack(pady=10)
+
     def add_finding(self, filename: str, description: str, lat, lon):
         entry = {
             "filename": filename,
@@ -121,8 +97,12 @@ class DroneFieldGUI(tk.Tk):
         self.result_images.append(photo)
 
         frame = tk.Frame(self.results_container, bd=1, relief="solid", padx=5, pady=5)
-        img_label = tk.Label(frame, image=photo)
+        img_label = tk.Label(frame, image=photo, cursor="hand2")
         img_label.pack(side="left")
+        img_label.bind(
+            "<Button-1>",
+            lambda e, p=filename, d=description, la=lat, lo=lon: self.show_full_image(p, d, la, lo),
+        )
         text = f"Lat: {lat}\nLon: {lon}\n{description}"
         tk.Label(frame, text=text, justify="left", wraplength=250).pack(side="left", padx=5)
 
@@ -157,8 +137,6 @@ class DroneFieldGUI(tk.Tk):
                         gps.get("longitude"),
                     )
             messagebox.showinfo("Scan Complete", f"Frames saved to '{output_dir}'")
-            if self.findings:
-                FindingViewer(self, self.findings)
         except Exception as exc:
             messagebox.showerror("Error", str(exc))
 
