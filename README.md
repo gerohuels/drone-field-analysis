@@ -10,10 +10,18 @@ Place your `.mp4` video and matching `.srt` file into the `footage/` folder befo
 
 ## AI bare spot detection
 
-The `src/ai.py` script demonstrates how to analyze the extracted frames using
+The `drone_field_analysis/utils/data_processing.py` module demonstrates how to analyze the extracted frames using
 the OpenAI API. A frame is sent to the `gpt-4o` model with instructions to look
 for large, clearly visible bare soil patches. If the model detects such a bare
 spot with high confidence it triggers the `report_bare_spot` function, printing
 the estimated location and confidence score.
 
 Set the `OPENAI_API_KEY` environment variable before running this script.
+
+## Running the application
+
+Install the dependencies listed in `requirements.txt` and start the GUI with:
+
+```bash
+python main.py
+```

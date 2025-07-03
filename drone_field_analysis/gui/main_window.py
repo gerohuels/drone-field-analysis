@@ -3,8 +3,10 @@ from tkinter import filedialog, messagebox
 from typing import cast
 
 from PIL import Image, ImageTk
-from extract_frames import extract_frames_with_gps
-from ai import analyze_frame
+
+from ..utils.frame_extractor import extract_frames_with_gps
+from ..utils.data_processing import analyze_frame
+from ..config.settings import OUTPUT_DIR
 
 class DroneFieldGUI(tk.Tk):
     def __init__(self):
@@ -124,7 +126,7 @@ class DroneFieldGUI(tk.Tk):
             messagebox.showerror("Missing Files", "Please select both MP4 and SRT files before scanning.")
             return
 
-        output_dir = "output"
+        output_dir = OUTPUT_DIR
         try:
             frames_info = extract_frames_with_gps(mp4, srt, output_dir)
             for frame_path, gps in frames_info.items():
