@@ -12,9 +12,11 @@ class DroneFieldGUI(tk.Tk):
         self.mp4_path = tk.StringVar()
         self.srt_path = tk.StringVar()
         self.findings = []
+
         self.result_images = []
         self.results_canvas = None
         self.results_container = None
+        self.results_list = None
         self.create_widgets()
 
     def create_widgets(self):
@@ -33,6 +35,7 @@ class DroneFieldGUI(tk.Tk):
 
         tk.Label(self, text="Found Elements").grid(row=5, column=0, columnspan=3)
 
+
         self.results_canvas = tk.Canvas(self, width=400, height=200)
         scrollbar = tk.Scrollbar(self, orient="vertical", command=self.results_canvas.yview)
         self.results_canvas.configure(yscrollcommand=scrollbar.set)
@@ -46,6 +49,10 @@ class DroneFieldGUI(tk.Tk):
             "<Configure>",
             lambda e: self.results_canvas.configure(scrollregion=self.results_canvas.bbox("all"))
         )
+
+        self.results_list = tk.Listbox(self, width=60, height=10)
+        self.results_list.grid(row=6, column=0, columnspan=3, padx=10, pady=5)
+
 
     def browse_mp4(self):
         path = filedialog.askopenfilename(filetypes=[("MP4 files", "*.mp4")])
@@ -69,6 +76,7 @@ class DroneFieldGUI(tk.Tk):
         }
         self.findings.append(entry)
 
+
         thumb = Image.open(filename)
         thumb.thumbnail((100, 100))
         photo = ImageTk.PhotoImage(thumb)
@@ -85,6 +93,12 @@ class DroneFieldGUI(tk.Tk):
             frame.pack(fill="x", padx=5, pady=5, before=children[0])
         else:
             frame.pack(fill="x", padx=5, pady=5)
+
+        self.results_list.delete(0, tk.END)
+        for item in reversed(self.findings):
+            text = f"{item['filename']} | {item['latitude']} {item['longitude']} | {item['description']}"
+            self.results_list.insert(tk.END, text)
+
 
     def scan(self):
         mp4 = self.mp4_path.get()
