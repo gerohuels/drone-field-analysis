@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 
 from extract_frames import extract_frames_with_gps
+from ai import analyze_frame
 
 class DroneFieldGUI(tk.Tk):
     def __init__(self):
@@ -9,6 +10,8 @@ class DroneFieldGUI(tk.Tk):
         self.title("Drone Field Analyzer")
         self.mp4_path = tk.StringVar()
         self.srt_path = tk.StringVar()
+        self.findings = []
+        self.results_list = None
         self.create_widgets()
 
     def create_widgets(self):
@@ -26,7 +29,8 @@ class DroneFieldGUI(tk.Tk):
         tk.Button(self, text="Scan", command=self.scan).grid(row=4, column=0, columnspan=3, pady=10)
 
         tk.Label(self, text="Found Elements").grid(row=5, column=0, columnspan=3)
-        tk.Listbox(self, width=60, height=10).grid(row=6, column=0, columnspan=3, padx=10, pady=5)
+        self.results_list = tk.Listbox(self, width=60, height=10)
+        self.results_list.grid(row=6, column=0, columnspan=3, padx=10, pady=5)
 
     def browse_mp4(self):
         path = filedialog.askopenfilename(filetypes=[("MP4 files", "*.mp4")])
@@ -41,6 +45,19 @@ class DroneFieldGUI(tk.Tk):
     def show_not_implemented(self):
         tk.messagebox.showinfo("Not Implemented", "This functionality is not implemented yet.")
 
+    def add_finding(self, filename: str, description: str, lat, lon):
+        entry = {
+            "filename": filename,
+            "description": description,
+            "latitude": lat,
+            "longitude": lon,
+        }
+        self.findings.append(entry)
+        self.results_list.delete(0, tk.END)
+        for item in reversed(self.findings):
+            text = f"{item['filename']} | {item['latitude']} {item['longitude']} | {item['description']}"
+            self.results_list.insert(tk.END, text)
+
     def scan(self):
         mp4 = self.mp4_path.get()
         srt = self.srt_path.get()
@@ -50,7 +67,16 @@ class DroneFieldGUI(tk.Tk):
 
         output_dir = "output"
         try:
-            extract_frames_with_gps(mp4, srt, output_dir)
+            frames_info = extract_frames_with_gps(mp4, srt, output_dir)
+            for frame_path, gps in frames_info.items():
+                result = analyze_frame(frame_path)
+                if result:
+                    self.add_finding(
+                        frame_path,
+                        result["report"],
+                        gps.get("latitude"),
+                        gps.get("longitude"),
+                    )
             messagebox.showinfo("Scan Complete", f"Frames saved to '{output_dir}'")
         except Exception as exc:
             messagebox.showerror("Error", str(exc))
