@@ -1,6 +1,9 @@
 import base64
 import json
+import os
 from openai import OpenAI
+
+from ..config.settings import OUTPUT_DIR
 
 
 client = OpenAI()
@@ -107,5 +110,5 @@ def analyze_frame(image_path: str):
 
 if __name__ == "__main__":
     # Simple manual test when running this file directly
-    sample_path = "output/frame_013.jpg"
+    sample_path = os.path.join(OUTPUT_DIR, "frame_013.jpg")
     analyze_frame(sample_path)

@@ -3,6 +3,8 @@ import os
 import re
 import pysrt
 
+from ..config.settings import OUTPUT_DIR
+
 
 def extract_gps_data_from_srt(srt_path):
     """Extract GPS data from an SRT file.
@@ -86,6 +88,4 @@ def extract_frames_with_gps(video_path: str, srt_path: str, output_folder: str) 
 if __name__ == "__main__":
     VIDEO_FILE = os.path.join("footage", "your_video.mp4")
     SRT_FILE = os.path.join("footage", "your_video.srt")
-    OUTPUT_DIR = "output"
-
     extract_frames_with_gps(VIDEO_FILE, SRT_FILE, OUTPUT_DIR)
