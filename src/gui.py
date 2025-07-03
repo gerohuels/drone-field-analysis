@@ -1,5 +1,46 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
+from typing import cast
+
+
+class FindingViewer(tk.Toplevel):
+    """Display findings one by one with next button."""
+
+    def __init__(self, master: tk.Misc, findings: list[dict]):
+        super().__init__(master)
+        self.title("Findings")
+        self.findings = findings
+        self.index = 0
+
+        self.image_label = tk.Label(self)
+        self.image_label.pack()
+
+        self.description_label = tk.Label(self, text="", font=("Arial", 14))
+        self.description_label.pack()
+
+        tk.Button(self, text="Next", command=self.next_image).pack()
+
+        self.show_image()
+
+    def show_image(self):
+        filename = self.findings[self.index]["filename"]
+        description = self.findings[self.index]["description"]
+        lat = self.findings[self.index]["latitude"]
+        lon = self.findings[self.index]["longitude"]
+
+        image = Image.open(filename)
+        image = image.resize((300, 300))
+        photo = cast(tk.PhotoImage, ImageTk.PhotoImage(image))
+
+        self.image_label.config(image=photo)
+        self.image_label.image = photo
+        text = f"Lat: {lat}\nLon: {lon}\n{description}"
+        self.description_label.config(text=text)
+
+    def next_image(self):
+        self.index = (self.index + 1) % len(self.findings)
+        self.show_image()
+
 from PIL import Image, ImageTk
 
 from extract_frames import extract_frames_with_gps
@@ -16,7 +57,6 @@ class DroneFieldGUI(tk.Tk):
         self.result_images = []
         self.results_canvas = None
         self.results_container = None
-        self.results_list = None
         self.create_widgets()
 
     def create_widgets(self):
@@ -50,8 +90,6 @@ class DroneFieldGUI(tk.Tk):
             lambda e: self.results_canvas.configure(scrollregion=self.results_canvas.bbox("all"))
         )
 
-        self.results_list = tk.Listbox(self, width=60, height=10)
-        self.results_list.grid(row=6, column=0, columnspan=3, padx=10, pady=5)
 
 
     def browse_mp4(self):
@@ -79,7 +117,7 @@ class DroneFieldGUI(tk.Tk):
 
         thumb = Image.open(filename)
         thumb.thumbnail((100, 100))
-        photo = ImageTk.PhotoImage(thumb)
+        photo = cast(tk.PhotoImage, ImageTk.PhotoImage(thumb))
         self.result_images.append(photo)
 
         frame = tk.Frame(self.results_container, bd=1, relief="solid", padx=5, pady=5)
@@ -97,11 +135,6 @@ class DroneFieldGUI(tk.Tk):
             frame.pack(fill="x", padx=5, pady=5, before=packed_children[0])
         else:
             frame.pack(fill="x", padx=5, pady=5)
-
-        self.results_list.delete(0, tk.END)
-        for item in reversed(self.findings):
-            text = f"{item['filename']} | {item['latitude']} {item['longitude']} | {item['description']}"
-            self.results_list.insert(tk.END, text)
 
 
     def scan(self):
@@ -124,6 +157,8 @@ class DroneFieldGUI(tk.Tk):
                         gps.get("longitude"),
                     )
             messagebox.showinfo("Scan Complete", f"Frames saved to '{output_dir}'")
+            if self.findings:
+                FindingViewer(self, self.findings)
         except Exception as exc:
             messagebox.showerror("Error", str(exc))
 
