@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
+from PIL import Image, ImageTk
 
 from extract_frames import extract_frames_with_gps
 from ai import analyze_frame
@@ -11,7 +12,9 @@ class DroneFieldGUI(tk.Tk):
         self.mp4_path = tk.StringVar()
         self.srt_path = tk.StringVar()
         self.findings = []
-        self.results_list = None
+        self.result_images = []
+        self.results_canvas = None
+        self.results_container = None
         self.create_widgets()
 
     def create_widgets(self):
@@ -29,8 +32,20 @@ class DroneFieldGUI(tk.Tk):
         tk.Button(self, text="Scan", command=self.scan).grid(row=4, column=0, columnspan=3, pady=10)
 
         tk.Label(self, text="Found Elements").grid(row=5, column=0, columnspan=3)
-        self.results_list = tk.Listbox(self, width=60, height=10)
-        self.results_list.grid(row=6, column=0, columnspan=3, padx=10, pady=5)
+
+        self.results_canvas = tk.Canvas(self, width=400, height=200)
+        scrollbar = tk.Scrollbar(self, orient="vertical", command=self.results_canvas.yview)
+        self.results_canvas.configure(yscrollcommand=scrollbar.set)
+
+        self.results_canvas.grid(row=6, column=0, columnspan=3, padx=10, pady=5, sticky="nsew")
+        scrollbar.grid(row=6, column=3, sticky="ns")
+
+        self.results_container = tk.Frame(self.results_canvas)
+        self.results_canvas.create_window((0, 0), window=self.results_container, anchor="nw")
+        self.results_container.bind(
+            "<Configure>",
+            lambda e: self.results_canvas.configure(scrollregion=self.results_canvas.bbox("all"))
+        )
 
     def browse_mp4(self):
         path = filedialog.askopenfilename(filetypes=[("MP4 files", "*.mp4")])
@@ -53,10 +68,23 @@ class DroneFieldGUI(tk.Tk):
             "longitude": lon,
         }
         self.findings.append(entry)
-        self.results_list.delete(0, tk.END)
-        for item in reversed(self.findings):
-            text = f"{item['filename']} | {item['latitude']} {item['longitude']} | {item['description']}"
-            self.results_list.insert(tk.END, text)
+
+        thumb = Image.open(filename)
+        thumb.thumbnail((100, 100))
+        photo = ImageTk.PhotoImage(thumb)
+        self.result_images.append(photo)
+
+        frame = tk.Frame(self.results_container, bd=1, relief="solid", padx=5, pady=5)
+        img_label = tk.Label(frame, image=photo)
+        img_label.pack(side="left")
+        text = f"Lat: {lat}\nLon: {lon}\n{description}"
+        tk.Label(frame, text=text, justify="left", wraplength=250).pack(side="left", padx=5)
+
+        children = self.results_container.winfo_children()
+        if children:
+            frame.pack(fill="x", padx=5, pady=5, before=children[0])
+        else:
+            frame.pack(fill="x", padx=5, pady=5)
 
     def scan(self):
         mp4 = self.mp4_path.get()
