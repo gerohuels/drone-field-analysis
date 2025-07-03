@@ -1,5 +1,6 @@
 import cv2
 import os
+import re
 import pysrt
 
 
@@ -24,12 +25,24 @@ def extract_gps_data_from_srt(srt_path):
     return gps_data
 
 
-def extract_frames_with_gps(video_path: str, srt_path: str, output_folder: str) -> None:
+def parse_coordinates(gps_text: str):
+    """Try to extract latitude and longitude from a line of GPS text.
+
+    The function searches for the first two floating point numbers in the string
+    and returns them as ``(lat, lon)`` if found. If parsing fails ``(None, None)``
+    is returned.
+    """
+    numbers = re.findall(r"-?\d+\.\d+", gps_text)
+    if len(numbers) >= 2:
+        return float(numbers[0]), float(numbers[1])
+    return None, None
+
+
+def extract_frames_with_gps(video_path: str, srt_path: str, output_folder: str) -> dict:
     """Save one frame per second of ``video_path`` along with GPS data.
 
-    The ``-> None`` return annotation means this function does not
-    return any value. It simply writes frames to disk and prints
-    messages during processing.
+    Returns a mapping ``{frame_path: {"latitude": float, "longitude": float, "gps_text": str}}``
+    describing the GPS data associated with each extracted frame.
 
     Parameters
     ----------
@@ -49,18 +62,25 @@ def extract_frames_with_gps(video_path: str, srt_path: str, output_folder: str) 
     frame_count = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
     duration = frame_count // fps
 
+    frames_info = {}
+
     for sec in range(duration):
         vidcap.set(cv2.CAP_PROP_POS_MSEC, sec * 1000)
         success, frame = vidcap.read()
         if success and sec in gps_data:
             filename = os.path.join(output_folder, f"frame_{sec:03d}.jpg")
             cv2.imwrite(filename, frame)
+            gps_text = gps_data[sec]
+            lat, lon = parse_coordinates(gps_text)
+            frames_info[filename] = {"latitude": lat, "longitude": lon, "gps_text": gps_text}
             print(f"Saved frame {sec}s -> {filename}")
-            print(f"GPS: {gps_data[sec]}")
+            print(f"GPS: {gps_text}")
         else:
             print(f"Skipping second {sec} (no frame or no GPS data)")
 
     vidcap.release()
+
+    return frames_info
 
 
 if __name__ == "__main__":
