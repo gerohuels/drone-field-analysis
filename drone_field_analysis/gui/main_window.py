@@ -1,6 +1,10 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from typing import cast
+import os
+import webbrowser
+
+import folium
 
 from PIL import Image, ImageTk
 
@@ -19,6 +23,7 @@ class DroneFieldGUI(tk.Tk):
         self.result_images = []
         self.results_canvas = None
         self.results_container = None
+        self.show_map_button = None
         self.create_widgets()
 
     def create_widgets(self):
@@ -51,6 +56,14 @@ class DroneFieldGUI(tk.Tk):
             "<Configure>",
             lambda e: self.results_canvas.configure(scrollregion=self.results_canvas.bbox("all"))
         )
+
+        self.show_map_button = tk.Button(
+            self,
+            text="Show on Map",
+            command=self.show_map,
+            state="disabled",
+        )
+        self.show_map_button.grid(row=7, column=0, columnspan=3, pady=10)
 
 
 
@@ -119,12 +132,44 @@ class DroneFieldGUI(tk.Tk):
             frame.pack(fill="x", padx=5, pady=5)
 
 
+    def show_map(self):
+        if not self.findings:
+            messagebox.showinfo("No Findings", "No findings to display on the map.")
+            return
+
+        map_center = [self.findings[0]["latitude"], self.findings[0]["longitude"]]
+        mymap = folium.Map(location=map_center, zoom_start=15)
+
+        for entry in self.findings:
+            image_html = f'''
+                <div>
+                    <strong>{entry["description"]}</strong><br>
+                    <img src="{entry["filename"]}" width="200"><br>
+                    <small>{entry["filename"]}</small>
+                </div>
+            '''
+            iframe = folium.IFrame(html=image_html, width=220, height=250)
+            popup = folium.Popup(iframe, max_width=250)
+            folium.Marker(
+                location=[entry["latitude"], entry["longitude"]],
+                popup=popup,
+                tooltip=entry["description"],
+            ).add_to(mymap)
+
+        output_map = os.path.join(OUTPUT_DIR, "findings_map.html")
+        mymap.save(output_map)
+        webbrowser.open(output_map)
+
+
     def scan(self):
         mp4 = self.mp4_path.get()
         srt = self.srt_path.get()
         if not mp4 or not srt:
             messagebox.showerror("Missing Files", "Please select both MP4 and SRT files before scanning.")
             return
+
+        if self.show_map_button:
+            self.show_map_button.config(state="disabled")
 
         output_dir = OUTPUT_DIR
         try:
@@ -139,6 +184,8 @@ class DroneFieldGUI(tk.Tk):
                         gps.get("longitude"),
                     )
             messagebox.showinfo("Scan Complete", f"Frames saved to '{output_dir}'")
+            if self.show_map_button:
+                self.show_map_button.config(state="normal")
         except Exception as exc:
             messagebox.showerror("Error", str(exc))
 
