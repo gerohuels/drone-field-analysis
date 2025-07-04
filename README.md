@@ -25,3 +25,7 @@ Install the dependencies listed in `requirements.txt` and start the GUI with:
 ```bash
 python main.py
 ```
+
+### Dependencies
+
+- [Folium](https://github.com/python-visualization/folium) - Used for rendering interactive maps in HTML. Licensed under the [MIT License](https://github.com/python-visualization/folium/blob/main/LICENSE).
