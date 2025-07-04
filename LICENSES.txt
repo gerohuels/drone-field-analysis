@@ -53,3 +53,15 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## Dependencies
 This project uses the Pillow library (https://python-pillow.org/), licensed under the HPND License.
+
+
+This project uses Folium (MIT License)
+https://github.com/python-visualization/folium
+
+Copyright (c) 2013 Matthew Perry
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction...
+
+
