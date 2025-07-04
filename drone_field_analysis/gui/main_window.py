@@ -141,15 +141,17 @@ class DroneFieldGUI(tk.Tk):
         mymap = folium.Map(location=map_center, zoom_start=15)
 
         for entry in self.findings:
+            image_file = os.path.basename(entry["filename"])
             image_html = f'''
                 <div>
                     <strong>{entry["description"]}</strong><br>
-                    <img src="{entry["filename"]}" width="200"><br>
-                    <small>{entry["filename"]}</small>
+                    <img src="{image_file}" width="200"><br>
+                    <small>{image_file}</small>
                 </div>
             '''
             iframe = folium.IFrame(html=image_html, width=220, height=250)
             popup = folium.Popup(iframe, max_width=250)
+
             folium.Marker(
                 location=[entry["latitude"], entry["longitude"]],
                 popup=popup,
