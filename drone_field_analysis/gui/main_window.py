@@ -164,6 +164,9 @@ class DroneFieldGUI(tk.Tk):
         abs_map_path = os.path.abspath(output_map)
         webbrowser.open_new_tab(f"file://{abs_map_path}")
 
+        webbrowser.open(output_map)
+
+
 
     def scan(self):
         mp4 = self.mp4_path.get()
