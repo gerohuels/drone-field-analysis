@@ -3,6 +3,7 @@ from tkinter import filedialog, messagebox
 from typing import cast
 import os
 import webbrowser
+import base64
 
 import folium
 
@@ -131,7 +132,6 @@ class DroneFieldGUI(tk.Tk):
         else:
             frame.pack(fill="x", padx=5, pady=5)
 
-
     def show_map(self):
         if not self.findings:
             messagebox.showinfo("No Findings", "No findings to display on the map.")
@@ -141,19 +141,30 @@ class DroneFieldGUI(tk.Tk):
         mymap = folium.Map(location=map_center, zoom_start=15)
 
         for entry in self.findings:
-            image_file = os.path.basename(entry["filename"])
+            image_path = entry["filename"]
+            image_file = os.path.basename(image_path)
+
+            # 🔧 Read image and convert to base64
+            try:
+                with open(image_path, "rb") as img_file:
+                    img_base64 = base64.b64encode(img_file.read()).decode("utf-8")
+            except Exception as e:
+                print(f"Failed to load image {image_path}: {e}")
+                img_base64 = ""
+
+            # 🖼️ Create HTML content with base64 image embedded
             image_html = f'''
                 <div>
                     <strong>{entry["description"]}</strong><br>
-                    <img src="{image_file}" width="200"><br>
+                    <img src="data:image/jpeg;base64,{img_base64}" width="200"><br>
                     <small>{image_file}</small>
                 </div>
             '''
             iframe = folium.IFrame(html=image_html, width=220, height=250)
             popup = folium.Popup(iframe, max_width=250)
 
-            tooltip_html = f'<img src="{entry["filename"]}" width="150">'
-            tooltip = folium.Tooltip(tooltip_html, parse_html=True)
+            # Tooltip as plain text only (image in tooltip not reliable)
+            tooltip = entry["description"]
 
             folium.Marker(
                 location=[entry["latitude"], entry["longitude"]],
@@ -164,12 +175,8 @@ class DroneFieldGUI(tk.Tk):
         output_map = os.path.join(OUTPUT_DIR, "findings_map.html")
         mymap.save(output_map)
 
-        # Use an absolute ``file://`` URL so ``webbrowser`` works reliably
-        # across platforms, including macOS.
         abs_map_path = os.path.abspath(output_map)
         webbrowser.open_new_tab(f"file://{abs_map_path}")
-
-        webbrowser.open(output_map)
 
 
 
