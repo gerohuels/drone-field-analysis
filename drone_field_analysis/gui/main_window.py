@@ -158,7 +158,14 @@ class DroneFieldGUI(tk.Tk):
 
         output_map = os.path.join(OUTPUT_DIR, "findings_map.html")
         mymap.save(output_map)
+
+        # Use an absolute ``file://`` URL so ``webbrowser`` works reliably
+        # across platforms, including macOS.
+        abs_map_path = os.path.abspath(output_map)
+        webbrowser.open_new_tab(f"file://{abs_map_path}")
+
         webbrowser.open(output_map)
+
 
 
     def scan(self):
