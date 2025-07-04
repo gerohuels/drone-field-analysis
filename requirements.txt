@@ -2,3 +2,4 @@ openai
 opencv-python
 pysrt
 Pillow
+folium
