@@ -152,10 +152,13 @@ class DroneFieldGUI(tk.Tk):
             iframe = folium.IFrame(html=image_html, width=220, height=250)
             popup = folium.Popup(iframe, max_width=250)
 
+            tooltip_html = f'<img src="{entry["filename"]}" width="150">'
+            tooltip = folium.Tooltip(tooltip_html, parse_html=True)
+
             folium.Marker(
                 location=[entry["latitude"], entry["longitude"]],
                 popup=popup,
-                tooltip=entry["description"],
+                tooltip=tooltip,
             ).add_to(mymap)
 
         output_map = os.path.join(OUTPUT_DIR, "findings_map.html")
