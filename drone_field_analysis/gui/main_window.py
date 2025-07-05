@@ -20,6 +20,7 @@ class DroneFieldGUI(tk.Tk):
         self.mp4_path = tk.StringVar()
         self.srt_path = tk.StringVar()
         self.findings = []
+        self.frames_info = {}
 
         self.result_images = []
         self.results_canvas = None
@@ -65,6 +66,13 @@ class DroneFieldGUI(tk.Tk):
             state="disabled",
         )
         self.show_map_button.grid(row=7, column=0, columnspan=3, pady=10)
+
+        self.show_path_var = tk.BooleanVar(value=True)
+        tk.Checkbutton(
+            self,
+            text="Show Flight Path",
+            variable=self.show_path_var,
+        ).grid(row=8, column=0, columnspan=3)
 
 
 
@@ -137,7 +145,13 @@ class DroneFieldGUI(tk.Tk):
             messagebox.showinfo("No Findings", "No findings to display on the map.")
             return
 
-        map_center = [self.findings[0]["latitude"], self.findings[0]["longitude"]]
+        if self.frames_info:
+            first_key = sorted(self.frames_info.keys())[0]
+            first_point = self.frames_info[first_key]
+            map_center = [first_point.get("latitude"), first_point.get("longitude")]
+        else:
+            map_center = [self.findings[0]["latitude"], self.findings[0]["longitude"]]
+
         mymap = folium.Map(location=map_center, zoom_start=15)
 
         for entry in self.findings:
@@ -172,11 +186,32 @@ class DroneFieldGUI(tk.Tk):
                 tooltip=tooltip,
             ).add_to(mymap)
 
+        self.add_flight_path(mymap)
+
         output_map = os.path.join(OUTPUT_DIR, "findings_map.html")
         mymap.save(output_map)
 
         abs_map_path = os.path.abspath(output_map)
         webbrowser.open_new_tab(f"file://{abs_map_path}")
+
+
+    def add_flight_path(self, mymap):
+        """Add a polyline showing the drone's path to ``mymap`` if enabled."""
+        if self.frames_info and self.show_path_var.get():
+            path_points = []
+            for key in sorted(self.frames_info.keys()):
+                info = self.frames_info[key]
+                lat = info.get("latitude")
+                lon = info.get("longitude")
+                if lat is not None and lon is not None:
+                    path_points.append((lat, lon))
+            if len(path_points) >= 2:
+                folium.PolyLine(
+                    path_points,
+                    color="blue",
+                    weight=2,
+                    opacity=0.7,
+                ).add_to(mymap)
 
 
 
@@ -193,6 +228,7 @@ class DroneFieldGUI(tk.Tk):
         output_dir = OUTPUT_DIR
         try:
             frames_info = extract_frames_with_gps(mp4, srt, output_dir)
+            self.frames_info = frames_info
             for frame_path, gps in frames_info.items():
                 result = analyze_frame(frame_path)
                 if result:
