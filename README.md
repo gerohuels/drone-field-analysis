@@ -35,3 +35,7 @@ python main.py
 - [pysrt](https://github.com/byroot/pysrt) - Parses subtitle files containing GPS coordinates.
 - [Pillow](https://python-pillow.org/) - Image loading and thumbnail generation.
 - [Folium](https://github.com/python-visualization/folium) - Renders the interactive map with popups.
+- [pandas](https://pandas.pydata.org/) - Stores extraction and detection results in a single DataFrame.
+
+### Acknowledgments
+This project uses the Pandas library, © The Pandas Development Team, licensed under the BSD 3-Clause License.
