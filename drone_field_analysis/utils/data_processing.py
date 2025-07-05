@@ -16,9 +16,12 @@ def encode_image(image_path: str) -> str:
 
 
 def report_bare_spot(location: str, confidence: float) -> str:
-    """Print and return a short report about a detected bare spot."""
-    message = f"✅ Found a bare spot at {location} with confidence {confidence:.2f}"
-    print(message)
+    """Return a two sentence description of a detected bare spot."""
+    message = (
+        f"A bare spot was detected at {location}. "
+        f"Detection confidence is {confidence:.2f}."
+    )
+    print(f"✅ {message}")
     return message
 
 
@@ -33,8 +36,10 @@ def analyze_frame(image_path: str):
     Returns
     -------
     dict | None
-        Dictionary with location, confidence and report message if a bare
-        spot was detected with high confidence, otherwise ``None``.
+        Dictionary describing the bare spot if one is detected with high
+        confidence. The dictionary contains ``object_type``, ``location``,
+        ``description``, ``confidence`` and ``bbox`` keys. If no bare spot is
+        found ``None`` is returned.
     """
     base64_image = encode_image(image_path)
     response = client.chat.completions.create(
@@ -101,9 +106,11 @@ def analyze_frame(image_path: str):
                 if args.get("confidence", 0) >= 0.85:
                     report = report_bare_spot(args["location"], args["confidence"])
                     return {
+                        "object_type": "bare spot",
                         "location": args["location"],
                         "confidence": args["confidence"],
-                        "report": report,
+                        "description": report,
+                        "bbox": None,
                     }
     return None
 

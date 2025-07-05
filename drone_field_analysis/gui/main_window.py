@@ -8,6 +8,7 @@ import base64
 import folium
 
 from PIL import Image, ImageTk
+import pandas as pd
 
 from ..utils.frame_extractor import extract_frames_with_gps
 from ..utils.data_processing import analyze_frame
@@ -19,8 +20,19 @@ class DroneFieldGUI(tk.Tk):
         self.title("Drone Field Analyzer")
         self.mp4_path = tk.StringVar()
         self.srt_path = tk.StringVar()
-        self.findings = []
-        self.frames_info = {}
+        self.data = pd.DataFrame(
+            columns=[
+                "frame",
+                "image_path",
+                "latitude",
+                "longitude",
+                "gps_text",
+                "object_type",
+                "description",
+                "confidence",
+                "bbox",
+            ]
+        )
 
         self.result_images = []
         self.results_canvas = None
@@ -99,15 +111,11 @@ class DroneFieldGUI(tk.Tk):
         info = f"Lat: {lat}\nLon: {lon}\n{description}"
         tk.Label(top, text=info, font=("Arial", 12)).pack(pady=10)
 
-    def add_finding(self, filename: str, description: str, lat, lon):
-        entry = {
-            "filename": filename,
-            "description": description,
-            "latitude": lat,
-            "longitude": lon,
-        }
-        self.findings.append(entry)
-
+    def add_finding(self, row):
+        filename = row["image_path"]
+        description = row["description"]
+        lat = row["latitude"]
+        lon = row["longitude"]
 
         thumb = Image.open(filename)
         thumb.thumbnail((100, 100))
@@ -135,21 +143,22 @@ class DroneFieldGUI(tk.Tk):
             frame.pack(fill="x", padx=5, pady=5)
 
     def show_map(self):
-        if not self.findings:
+        found_df = self.data.dropna(subset=["object_type"])
+        if found_df.empty:
             messagebox.showinfo("No Findings", "No findings to display on the map.")
             return
 
-        if self.frames_info:
-            first_key = sorted(self.frames_info.keys())[0]
-            first_point = self.frames_info[first_key]
+        if not self.data.empty:
+            first_point = self.data.sort_values("frame").iloc[0]
             map_center = [first_point.get("latitude"), first_point.get("longitude")]
         else:
-            map_center = [self.findings[0]["latitude"], self.findings[0]["longitude"]]
+            first_point = found_df.iloc[0]
+            map_center = [first_point.get("latitude"), first_point.get("longitude")]
 
         mymap = folium.Map(location=map_center, zoom_start=15)
 
-        for entry in self.findings:
-            image_path = entry["filename"]
+        for _, entry in found_df.iterrows():
+            image_path = entry["image_path"]
             image_file = os.path.basename(image_path)
 
             # 🔧 Read image and convert to base64
@@ -192,13 +201,12 @@ class DroneFieldGUI(tk.Tk):
 
     def add_flight_path(self, mymap):
         """Add a polyline showing the drone's path to ``mymap`` if enabled."""
-        if self.frames_info and self.show_path_var.get():
+        if not self.data.empty and self.show_path_var.get():
             path_points = []
-            for key in sorted(self.frames_info.keys()):
-                info = self.frames_info[key]
+            for _, info in self.data.sort_values("frame").iterrows():
                 lat = info.get("latitude")
                 lon = info.get("longitude")
-                if lat is not None and lon is not None:
+                if pd.notna(lat) and pd.notna(lon):
                     path_points.append((lat, lon))
             if len(path_points) >= 2:
                 folium.PolyLine(
@@ -222,17 +230,15 @@ class DroneFieldGUI(tk.Tk):
 
         output_dir = OUTPUT_DIR
         try:
-            frames_info = extract_frames_with_gps(mp4, srt, output_dir)
-            self.frames_info = frames_info
-            for frame_path, gps in frames_info.items():
-                result = analyze_frame(frame_path)
+            self.data = extract_frames_with_gps(mp4, srt, output_dir)
+            for idx, row in self.data.iterrows():
+                result = analyze_frame(row["image_path"])
                 if result:
-                    self.add_finding(
-                        frame_path,
-                        result["report"],
-                        gps.get("latitude"),
-                        gps.get("longitude"),
-                    )
+                    self.data.at[idx, "object_type"] = result["object_type"]
+                    self.data.at[idx, "description"] = result["description"]
+                    self.data.at[idx, "confidence"] = result["confidence"]
+                    self.data.at[idx, "bbox"] = result["bbox"]
+                    self.add_finding(self.data.loc[idx])
             messagebox.showinfo("Scan Complete", f"Frames saved to '{output_dir}'")
             if self.show_map_button:
                 self.show_map_button.config(state="normal")

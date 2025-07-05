@@ -2,6 +2,7 @@ import cv2
 import os
 import re
 import pysrt
+import pandas as pd
 
 from ..config.settings import OUTPUT_DIR
 
@@ -40,11 +41,14 @@ def parse_coordinates(gps_text: str):
     return None, None
 
 
-def extract_frames_with_gps(video_path: str, srt_path: str, output_folder: str) -> dict:
+def extract_frames_with_gps(video_path: str, srt_path: str, output_folder: str) -> pd.DataFrame:
     """Save one frame per second of ``video_path`` along with GPS data.
 
-    Returns a mapping ``{frame_path: {"latitude": float, "longitude": float, "gps_text": str}}``
-    describing the GPS data associated with each extracted frame.
+    Returns a ``pandas.DataFrame`` with the columns ``frame`` and ``image_path``
+    populated. Additional columns ``object_type``, ``description``,
+    ``confidence`` and ``bbox`` are included for later population during object
+    detection. Latitude/longitude information is also stored for mapping
+    purposes.
 
     Parameters
     ----------
@@ -64,7 +68,7 @@ def extract_frames_with_gps(video_path: str, srt_path: str, output_folder: str) 
     frame_count = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
     duration = frame_count // fps
 
-    frames_info = {}
+    rows = []
 
     for sec in range(duration):
         vidcap.set(cv2.CAP_PROP_POS_MSEC, sec * 1000)
@@ -74,7 +78,19 @@ def extract_frames_with_gps(video_path: str, srt_path: str, output_folder: str) 
             cv2.imwrite(filename, frame)
             gps_text = gps_data[sec]
             lat, lon = parse_coordinates(gps_text)
-            frames_info[filename] = {"latitude": lat, "longitude": lon, "gps_text": gps_text}
+            rows.append(
+                {
+                    "frame": sec,
+                    "image_path": filename,
+                    "latitude": lat,
+                    "longitude": lon,
+                    "gps_text": gps_text,
+                    "object_type": None,
+                    "description": None,
+                    "confidence": None,
+                    "bbox": None,
+                }
+            )
             print(f"Saved frame {sec}s -> {filename}")
             print(f"GPS: {gps_text}")
         else:
@@ -82,7 +98,21 @@ def extract_frames_with_gps(video_path: str, srt_path: str, output_folder: str) 
 
     vidcap.release()
 
-    return frames_info
+    df = pd.DataFrame(
+        rows,
+        columns=[
+            "frame",
+            "image_path",
+            "latitude",
+            "longitude",
+            "gps_text",
+            "object_type",
+            "description",
+            "confidence",
+            "bbox",
+        ],
+    )
+    return df
 
 
 if __name__ == "__main__":
