@@ -178,6 +178,7 @@ class DroneFieldGUI(tk.Tk):
                 location=[entry["latitude"], entry["longitude"]],
                 popup=popup,
                 tooltip=tooltip,
+                icon=folium.Icon(color="brown"),
             ).add_to(mymap)
 
         self.add_flight_path(mymap)
