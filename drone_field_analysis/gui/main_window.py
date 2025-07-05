@@ -38,10 +38,7 @@ class DroneFieldGUI(tk.Tk):
         tk.Label(self, text="SRT File:").grid(row=2, column=0, sticky="e", padx=5, pady=5)
         tk.Entry(self, width=40, textvariable=self.srt_path).grid(row=2, column=1, padx=5, pady=5)
         tk.Button(self, text="Browse", command=self.browse_srt).grid(row=2, column=2, padx=5, pady=5)
-
-        tk.Button(self, text="Add Files", command=self.show_not_implemented).grid(row=3, column=0, columnspan=3, pady=10)
         tk.Button(self, text="Scan", command=self.scan).grid(row=4, column=0, columnspan=3, pady=10)
-
         tk.Label(self, text="Found Elements").grid(row=5, column=0, columnspan=3)
 
 
@@ -85,9 +82,6 @@ class DroneFieldGUI(tk.Tk):
         path = filedialog.askopenfilename(filetypes=[("SRT files", "*.srt")])
         if path:
             self.srt_path.set(path)
-
-    def show_not_implemented(self):
-        tk.messagebox.showinfo("Not Implemented", "This functionality is not implemented yet.")
 
     def show_full_image(self, img_path: str, description: str, lat, lon) -> None:
         """Open a new window displaying a larger version of the image."""
