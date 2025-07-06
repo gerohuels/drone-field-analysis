@@ -1,10 +1,14 @@
-import cv2
+import logging
 import os
 import re
-import pysrt
+
+import cv2
 import pandas as pd
+import pysrt
 
 from ..config.settings import OUTPUT_DIR
+
+logger = logging.getLogger(__name__)
 
 
 def extract_gps_data_from_srt(srt_path):
@@ -48,7 +52,7 @@ def extract_frames_with_gps(
 
     Returns a ``pandas.DataFrame`` with the columns ``frame`` and ``image_path``
     populated. Additional columns ``object_type``, ``description``,
-    ``confidence`` and ``box_paramter`` are included for later population during
+    ``confidence`` and ``box_parameter`` are included for later population during
     object detection. Latitude/longitude information is also stored for mapping
     purposes.
 
@@ -90,14 +94,14 @@ def extract_frames_with_gps(
                     "object_type": None,
                     "description": None,
                     "confidence": None,
-                    "box_paramter": None,
+                    "box_parameter": None,
                     "boxed_image_path": None,
                 }
             )
-            print(f"Saved frame {sec}s -> {filename}")
-            print(f"GPS: {gps_text}")
+            logger.info("Saved frame %ss -> %s", sec, filename)
+            logger.debug("GPS: %s", gps_text)
         else:
-            print(f"Skipping second {sec} (no frame or no GPS data)")
+            logger.info("Skipping second %s (no frame or no GPS data)", sec)
 
     vidcap.release()
 
@@ -112,7 +116,7 @@ def extract_frames_with_gps(
             "object_type",
             "description",
             "confidence",
-            "box_paramter",
+            "box_parameter",
             "boxed_image_path",
         ],
     )

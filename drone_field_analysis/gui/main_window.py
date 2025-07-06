@@ -1,4 +1,6 @@
+import logging
 import tkinter as tk
+
 from tkinter import filedialog, messagebox
 from typing import cast
 import os
@@ -13,6 +15,8 @@ import pandas as pd
 from ..utils.frame_extractor import extract_frames_with_gps
 from ..utils.data_processing import analyze_frame
 from ..config.settings import OUTPUT_DIR
+
+logger = logging.getLogger(__name__)
 
 
 class DroneFieldGUI(tk.Tk):
@@ -31,7 +35,7 @@ class DroneFieldGUI(tk.Tk):
                 "object_type",
                 "description",
                 "confidence",
-                "box_paramter",
+                "box_parameter",
                 "boxed_image_path",
             ]
         )
@@ -123,9 +127,9 @@ class DroneFieldGUI(tk.Tk):
         top = tk.Toplevel(self)
         top.title("Image Viewer")
 
-        img = Image.open(img_path)
-        img = img.resize((600, 600))
-        img_photo = cast(tk.PhotoImage, ImageTk.PhotoImage(img))
+        with Image.open(img_path) as img:
+            img = img.resize((600, 600))
+            img_photo = cast(tk.PhotoImage, ImageTk.PhotoImage(img))
 
         img_label = tk.Label(top, image=img_photo)
         img_label.image = img_photo  # keep reference
@@ -140,9 +144,9 @@ class DroneFieldGUI(tk.Tk):
         lat = row["latitude"]
         lon = row["longitude"]
 
-        thumb = Image.open(filename)
-        thumb.thumbnail((100, 100))
-        photo = cast(tk.PhotoImage, ImageTk.PhotoImage(thumb))
+        with Image.open(filename) as thumb_img:
+            thumb_img.thumbnail((100, 100))
+            photo = cast(tk.PhotoImage, ImageTk.PhotoImage(thumb_img))
         self.result_images.append(photo)
 
         #Klick on full thumbnail for full-image
@@ -191,7 +195,7 @@ class DroneFieldGUI(tk.Tk):
                 with open(image_path, "rb") as img_file:
                     img_base64 = base64.b64encode(img_file.read()).decode("utf-8")
             except Exception as e:
-                print(f"Failed to load image {image_path}: {e}")
+                logger.error("Failed to load image %s: %s", image_path, e)
                 img_base64 = ""
 
             # 🖼️ Create HTML content with base64 image embedded
@@ -261,21 +265,21 @@ class DroneFieldGUI(tk.Tk):
                     self.data.at[idx, "object_type"] = result["object_type"]
                     self.data.at[idx, "description"] = result["description"]
                     self.data.at[idx, "confidence"] = result["confidence"]
-                    self.data.at[idx, "box_paramter"] = result.get("box_paramter")
+                    self.data.at[idx, "box_parameter"] = result.get("box_parameter")
                     boxed_path = row["image_path"]
-                    if result.get("box_paramter"):
+                    if result.get("box_parameter"):
                         try:
                             img = Image.open(row["image_path"])
                             draw = ImageDraw.Draw(img)
                             draw.rectangle(
-                                tuple(result["box_paramter"]), outline="blue", width=5
+                                tuple(result["box_parameter"]), outline="blue", width=5
                             )
                             boxed_path = (
                                 row["image_path"].rsplit(".", 1)[0] + "_boxed.jpg"
                             )
                             img.save(boxed_path)
                         except Exception as e:
-                            print(f"Failed to draw box on {row['image_path']}: {e}")
+                            logger.error("Failed to draw box on %s: %s", row["image_path"], e)
                             boxed_path = row["image_path"]
                     self.data.at[idx, "boxed_image_path"] = boxed_path
                     self.add_finding(self.data.loc[idx])

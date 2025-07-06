@@ -1,11 +1,13 @@
 import base64
 import json
+import logging
 import os
 from openai import OpenAI
 
 from ..config.settings import OUTPUT_DIR
 
 
+logger = logging.getLogger(__name__)
 client = OpenAI()
 
 
@@ -15,14 +17,14 @@ def encode_image(image_path: str) -> str:
         return base64.b64encode(image_file.read()).decode("utf-8")
 
 
-def report_bare_spot(report: str, confidence: float, box_paramter: str) -> str:
+def report_bare_spot(report: str, confidence: float, box_parameter: str) -> str:
     """Return a short description of a detected bare spot."""
     message = (
         f"Report: {report} \n"
         f"Detection confidence is {confidence:.2f}. \n"
-        f"Box coordinates: {box_paramter}."
+        f"Box coordinates: {box_parameter}."
     )
-    print(f"🔍 {message}")
+    logger.info("\N{microscope} %s", message)
     return message
 
 
@@ -39,7 +41,7 @@ def analyze_frame(image_path: str):
     dict | None
         Dictionary describing the bare spot if one is detected with high
         confidence. The dictionary contains ``object_type``, ``location``,
-        ``description``, ``confidence`` and ``box_paramter`` keys. If no bare
+        ``description``, ``confidence`` and ``box_parameter`` keys. If no bare
         spot is found ``None`` is returned.
     """
     base64_image = encode_image(image_path)
@@ -91,13 +93,13 @@ def analyze_frame(image_path: str):
                                 "type": "number",
                                 "description": "Confidence level from 0 to 1",
                             },
-                            "box_paramter": {
+                            "box_parameter": {
                                 "type": "array",
                                 "items": {"type": "integer"},
                                 "description": "Bounding box [x1, y1, x2, y2] using 1920x1080 image coordinates",
                             },
                         },
-                        "required": ["report", "confidence", "box_paramter"],
+                        "required": ["report", "confidence", "box_parameter"],
                     },
                 },
             }
@@ -115,14 +117,14 @@ def analyze_frame(image_path: str):
                     report = report_bare_spot(
                         args["report"],
                         args["confidence"],
-                        str(args.get("box_paramter")),
+                        str(args.get("box_parameter")),
                     )
                     return {
                         "object_type": "bare spot",
                         "report": args["report"],
                         "confidence": args["confidence"],
                         "description": report,
-                        "box_paramter": args.get("box_paramter"),
+                        "box_parameter": args.get("box_parameter"),
                     }
     return None
 
