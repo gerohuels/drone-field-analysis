@@ -1,9 +1,9 @@
 # drone-field-analysis
-An app for analyzing drone footage to detect weeds and assess crop health. Visualizes results on a field map.
+An application for analyzing drone footage to **find bare spots in a field** and assess overall crop health. Detected areas are visualized on an interactive field map.
 
 The application processes `.mp4` video footage of the field along with a corresponding `.srt` file that contains GPS location data from the drone.
-It detects and identifies areas with weeds and dry spots in the field, saving frames where such objects are found, along with their GPS coordinates.
-All detected objects are visualized on a field map for easy monitoring and analysis. Each marker now opens a popup containing a preview image of the detection for quick review.
+It identifies bare soil patches in the field, saving frames where such areas are found along with their GPS coordinates.
+All detections are visualized on a field map for easy monitoring and analysis. Each marker opens a popup containing a preview image for quick review.
 
 The GUI presents a scrollable list of all findings. Clicking a thumbnail opens the full-size frame along with its GPS information.
 
@@ -27,6 +27,24 @@ Install the dependencies listed in `requirements.txt` and start the GUI with:
 ```bash
 python main.py
 ```
+
+## User Flow
+
+1. Launch the program with the command above. The main window opens.
+2. Click **Browse** beside *MP4 File* and select your drone video.
+3. Click **Browse** beside *SRT File* and choose the matching subtitle file containing GPS data.
+4. Press **Scan** to extract frames and analyze each one for bare spots.
+5. Detected spots appear in the **Found Elements** list as image thumbnails.
+6. Click any thumbnail to view the full image and its GPS coordinates.
+7. When scanning finishes, press **Show on Map** to open a browser displaying all detections. Enable *Show Flight Path* to visualize the drone's route.
+
+## Features
+
+- Extracts one frame per second from the footage and stores its GPS location.
+- Uses the OpenAI GPT-4o model to spot large bare soil areas.
+- Optionally draws a bounding box around each detection on the saved frame.
+- Scrollable interface with thumbnails and descriptions of all findings.
+- Interactive map showing detections and the drone's flight path.
 
 ### Dependencies
 

@@ -1,3 +1,5 @@
+"""Tkinter GUI for interacting with the drone field analysis pipeline."""
+
 import logging
 import tkinter as tk
 
@@ -20,11 +22,15 @@ logger = logging.getLogger(__name__)
 
 
 class DroneFieldGUI(tk.Tk):
+    """Main application window."""
+
     def __init__(self):
+        """Initialize the GUI and set up default state."""
         super().__init__()
         self.title("Drone Field Analyzer")
         self.mp4_path = tk.StringVar()
         self.srt_path = tk.StringVar()
+        # Store metadata and detection results for each extracted frame
         self.data = pd.DataFrame(
             columns=[
                 "frame",
@@ -40,13 +46,16 @@ class DroneFieldGUI(tk.Tk):
             ]
         )
 
+        # Hold references to thumbnail images to prevent garbage collection
         self.result_images = []
+        # Widgets created during setup
         self.results_canvas = None
         self.results_container = None
         self.show_map_button = None
         self.create_widgets()
 
     def create_widgets(self):
+        """Create all Tkinter widgets used in the main window."""
         tk.Label(
             self, text="Drone Field Analyzer", font=("Helvetica", 16, "bold")
         ).grid(row=0, column=0, columnspan=3, pady=10)
@@ -113,17 +122,29 @@ class DroneFieldGUI(tk.Tk):
         ).grid(row=8, column=0, columnspan=3)
 
     def browse_mp4(self):
+        """Prompt the user to select an MP4 file."""
         path = filedialog.askopenfilename(filetypes=[("MP4 files", "*.mp4")])
         if path:
             self.mp4_path.set(path)
 
     def browse_srt(self):
+        """Prompt the user to select an SRT subtitle file."""
         path = filedialog.askopenfilename(filetypes=[("SRT files", "*.srt")])
         if path:
             self.srt_path.set(path)
 
     def show_full_image(self, img_path: str, description: str, lat, lon) -> None:
-        """Open a new window displaying a larger version of the image."""
+        """Display a larger preview of a detection.
+
+        Parameters
+        ----------
+        img_path:
+            Path to the image file to display.
+        description:
+            Short text describing the detection.
+        lat, lon:
+            GPS coordinates associated with the frame.
+        """
         top = tk.Toplevel(self)
         top.title("Image Viewer")
 
@@ -139,6 +160,7 @@ class DroneFieldGUI(tk.Tk):
         tk.Label(top, text=info, font=("Arial", 12)).pack(pady=10)
 
     def add_finding(self, row):
+        """Insert a detected bare spot into the results list."""
         filename = row.get("boxed_image_path") or row["image_path"]
         description = row["description"]
         lat = row["latitude"]
@@ -171,6 +193,7 @@ class DroneFieldGUI(tk.Tk):
             frame.pack(fill="x", padx=5, pady=5)
 
     def show_map(self):
+        """Open a browser map visualizing all detections."""
 
         found_df = self.data.dropna(subset=["object_type"])
         if found_df.empty:
@@ -245,6 +268,7 @@ class DroneFieldGUI(tk.Tk):
                 ).add_to(mymap)
 
     def scan(self):
+        """Run frame extraction and bare spot detection."""
         mp4 = self.mp4_path.get()
         srt = self.srt_path.get()
         if not mp4 or not srt:
@@ -254,6 +278,7 @@ class DroneFieldGUI(tk.Tk):
             return
 
         if self.show_map_button:
+            # Disable map button until the scan has completed
             self.show_map_button.config(state="disabled")
 
         output_dir = OUTPUT_DIR
@@ -271,9 +296,11 @@ class DroneFieldGUI(tk.Tk):
                         try:
                             img = Image.open(row["image_path"])
                             draw = ImageDraw.Draw(img)
+                            # Outline the detected region on the image
                             draw.rectangle(
                                 tuple(result["box_parameter"]), outline="blue", width=5
                             )
+                            # Save boxed image next to the original frame
                             boxed_path = (
                                 row["image_path"].rsplit(".", 1)[0] + "_boxed.jpg"
                             )
@@ -282,9 +309,11 @@ class DroneFieldGUI(tk.Tk):
                             logger.error("Failed to draw box on %s: %s", row["image_path"], e)
                             boxed_path = row["image_path"]
                     self.data.at[idx, "boxed_image_path"] = boxed_path
+                    # Insert the detection into the on-screen results list
                     self.add_finding(self.data.loc[idx])
             messagebox.showinfo("Scan Complete", f"Frames saved to '{output_dir}'")
             if self.show_map_button:
+                # Enable map button once processing is finished
                 self.show_map_button.config(state="normal")
         except Exception as exc:
             messagebox.showerror("Error", str(exc))
