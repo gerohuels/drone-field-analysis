@@ -1,3 +1,11 @@
+"""Frame extraction helpers.
+
+This module handles pulling individual frames from drone footage and attaching
+GPS information from the matching ``.srt`` subtitle track.  The resulting data
+is stored in a ``pandas.DataFrame`` which is later used for analysis and
+visualisation.
+"""
+
 import logging
 import os
 import re
@@ -72,11 +80,14 @@ def extract_frames_with_gps(
     vidcap = cv2.VideoCapture(video_path)
     fps = int(vidcap.get(cv2.CAP_PROP_FPS))
     frame_count = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
+    # Total duration in seconds (integer division avoids partial seconds)
     duration = frame_count // fps
 
     rows = []
 
+    # iterate through the video one second at a time
     for sec in range(duration):
+        # Jump to the correct timestamp and grab a frame
         vidcap.set(cv2.CAP_PROP_POS_MSEC, sec * 1000)
         success, frame = vidcap.read()
         if success and sec in gps_data:
@@ -103,8 +114,10 @@ def extract_frames_with_gps(
         else:
             logger.info("Skipping second %s (no frame or no GPS data)", sec)
 
+    # Release the video capture handle when done
     vidcap.release()
 
+    # Build a DataFrame so downstream steps can easily access frame metadata
     df = pd.DataFrame(
         rows,
         columns=[

@@ -1,3 +1,5 @@
+"""Bare spot detection routines using the OpenAI API."""
+
 import base64
 import json
 import logging
@@ -12,13 +14,22 @@ client = OpenAI()
 
 
 def encode_image(image_path: str) -> str:
-    """Return a base64 encoded string for the given image."""
+    """Return a base64 encoded string for the given image.
+
+    The OpenAI API expects image content to be provided as a base64 string,
+    so this helper reads the file and performs the conversion.
+    """
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode("utf-8")
 
 
 def report_bare_spot(report: str, confidence: float, box_parameter: str) -> str:
-    """Return a short description of a detected bare spot."""
+    """Return a short description of a detected bare spot.
+
+    This function mirrors the schema expected by the OpenAI function calling
+    API. It is invoked by the language model when a bare spot is found with
+    sufficient confidence.
+    """
     message = (
         f"Report: {report} \n"
         f"Detection confidence is {confidence:.2f}. \n"
@@ -44,6 +55,7 @@ def analyze_frame(image_path: str):
         ``description``, ``confidence`` and ``box_parameter`` keys. If no bare
         spot is found ``None`` is returned.
     """
+    # Convert the frame to a base64 string and send it to the vision model
     base64_image = encode_image(image_path)
     response = client.chat.completions.create(
         model="gpt-4o",
@@ -108,11 +120,14 @@ def analyze_frame(image_path: str):
         max_tokens=100,
     )
 
+    # The model may decide to call ``report_bare_spot`` with its findings
     tool_calls = response.choices[0].message.tool_calls
     if tool_calls:
+        # Iterate over any function calls returned by the model
         for tool_call in tool_calls:
             if tool_call.function.name == "report_bare_spot":
                 args = json.loads(tool_call.function.arguments)
+                # Only accept detections with reasonably high confidence
                 if args.get("confidence", 0) >= 0.85:
                     report = report_bare_spot(
                         args["report"],
@@ -120,6 +135,7 @@ def analyze_frame(image_path: str):
                         str(args.get("box_parameter")),
                     )
                     return {
+                        # Information stored back into the DataFrame
                         "object_type": "bare spot",
                         "report": args["report"],
                         "confidence": args["confidence"],

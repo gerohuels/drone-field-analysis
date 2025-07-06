@@ -6,8 +6,10 @@ from drone_field_analysis.utils.logging_utils import configure_logging
 
 def main() -> None:
     """Start the GUI application."""
+    # Configure the root logger before any other modules create loggers
     configure_logging()
     app = DroneFieldGUI()
+    # Hand control over to Tkinter's event loop
     app.mainloop()
 
 

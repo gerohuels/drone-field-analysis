@@ -1,1 +1,1 @@
-"""GUI components."""
+"""Graphical user interface for Drone Field Analysis."""

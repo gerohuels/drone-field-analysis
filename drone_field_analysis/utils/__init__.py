@@ -1,1 +1,1 @@
-"""Utility modules."""
+"""Helper functions used throughout the application."""
