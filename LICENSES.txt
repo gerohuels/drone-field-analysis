@@ -4,6 +4,13 @@ Third-Party Licenses
 
 This project uses the following open-source libraries:
 
+* OpenCV (via opencv-python) - Apache 2.0
+* pysrt - MIT
+* Pillow - HPND
+* Folium - MIT
+* openai-python - MIT
+* pandas - BSD 3-Clause
+
 -------------------------------------------------------
 OpenCV (via opencv-python)
 License: Apache License, Version 2.0
@@ -53,6 +60,25 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## Dependencies
 This project uses the Pillow library (https://python-pillow.org/), licensed under the HPND License.
+
+Historical Permission Notice and Disclaimer (HPND)
+
+Copyright (c) 1997-2011 by Secret Labs AB
+Copyright (c) 1995-2011 by Fredrik Lundh
+
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted, provided
+that the above copyright notice appears in all copies and that both that
+copyright notice and this permission notice appear in supporting
+documentation.
+
+SECRET LABS AB AND AUTHORS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
+SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
+IN NO EVENT SHALL SECRET LABS AB OR AUTHORS BE LIABLE FOR ANY SPECIAL,
+INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
 
 
 This project uses Folium (MIT License)
