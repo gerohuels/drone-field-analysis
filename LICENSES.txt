@@ -3,17 +3,18 @@ Third-Party Licenses
 ===============================
 
 This project uses the following open-source libraries:
+- openai>=1.3
+- opencv-python>=4.9
+- pysrt>=1.1
+- Pillow>=10.0
+- folium>=0.15
+- pandas>=2.1
 
-* OpenCV (via opencv-python) - Apache 2.0
-* pysrt - MIT
-* Pillow - HPND
-* Folium - MIT
-* openai-python - MIT
-* pandas - BSD 3-Clause
+The following are the license details of each dependency:
 
 -------------------------------------------------------
 OpenCV (via opencv-python)
-License: Apache License, Version 2.0
+License: Apache License, Version 2.0  
 Homepage: https://opencv.org/
 -------------------------------------------------------
 
@@ -32,8 +33,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 -------------------------------------------------------
-pysrt
-License: MIT License
+pysrt  
+License: MIT License  
 Homepage: https://github.com/byroot/pysrt
 -------------------------------------------------------
 
@@ -58,12 +59,15 @@ HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTIO
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-## Dependencies
-This project uses the Pillow library (https://python-pillow.org/), licensed under the HPND License.
+-------------------------------------------------------
+Pillow  
+License: Historical Permission Notice and Disclaimer (HPND)  
+Homepage: https://python-pillow.org/
+-------------------------------------------------------
 
 Historical Permission Notice and Disclaimer (HPND)
 
-Copyright (c) 1997-2011 by Secret Labs AB
+Copyright (c) 1997-2011 by Secret Labs AB  
 Copyright (c) 1995-2011 by Fredrik Lundh
 
 Permission to use, copy, modify, and distribute this software and its
@@ -80,9 +84,13 @@ LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
 OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 
+-------------------------------------------------------
+Folium  
+License: MIT License  
+Homepage: https://github.com/python-visualization/folium
+-------------------------------------------------------
 
-This project uses Folium (MIT License)
-https://github.com/python-visualization/folium
+MIT License
 
 Copyright (c) 2013 Matthew Perry
 
@@ -105,8 +113,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 -------------------------------------------------------
-openai-python
-License: MIT License
+openai-python  
+License: MIT License  
 Homepage: https://github.com/openai/openai-python
 -------------------------------------------------------
 
@@ -132,17 +140,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-
-
 -------------------------------------------------------
-pandas
-License: BSD 3-Clause "New" or "Revised" License
+pandas  
+License: BSD 3-Clause "New" or "Revised" License  
 Homepage: https://pandas.pydata.org/
 -------------------------------------------------------
 
 BSD 3-Clause License
 
-Copyright (c) 2008-2024, The pandas development team
+Copyright (c) 2008-2024, The pandas development team  
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
