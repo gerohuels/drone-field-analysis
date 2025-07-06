@@ -139,7 +139,9 @@ class DroneFieldGUI(tk.Tk):
             return description.split("Box coordinates:")[0].strip()
         return description
 
-    def show_full_image(self, img_path: str, description: str, lat, lon) -> None:
+    def show_full_image(
+        self, img_path: str, description: str, lat, lon, gps_text: str = ""
+    ) -> None:
         """Display a larger preview of a detection.
 
         Parameters
@@ -150,6 +152,8 @@ class DroneFieldGUI(tk.Tk):
             Short text describing the detection.
         lat, lon:
             GPS coordinates associated with the frame.
+        gps_text:
+            Raw GPS text from the subtitle track.
         """
         top = tk.Toplevel(self)
         top.title("Image Viewer")
@@ -163,7 +167,11 @@ class DroneFieldGUI(tk.Tk):
         img_label.pack()
 
         clean_desc = self._clean_description(description)
-        info = f"Lat: {lat}\nLon: {lon}\n{clean_desc}"
+        info_lines = [f"Lat: {lat}", f"Lon: {lon}"]
+        if gps_text:
+            info_lines.append(f"GPS: {gps_text}")
+        info_lines.append(clean_desc)
+        info = "\n".join(info_lines)
         tk.Label(top, text=info, font=("Arial", 12)).pack(pady=10)
 
     def add_finding(self, row):
@@ -172,6 +180,7 @@ class DroneFieldGUI(tk.Tk):
         description = row["description"]
         lat = row["latitude"]
         lon = row["longitude"]
+        gps_text = row["gps_text"]
 
         with Image.open(filename) as thumb_img:
             thumb_img.thumbnail((100, 100))
@@ -184,8 +193,8 @@ class DroneFieldGUI(tk.Tk):
         img_label.pack(side="left")
         img_label.bind(
             "<Button-1>",
-            lambda e, p=filename, d=description, la=lat, lo=lon: self.show_full_image(
-                p, d, la, lo
+            lambda e, p=filename, d=description, la=lat, lo=lon, g=gps_text: self.show_full_image(
+                p, d, la, lo, g
             ),
         )
         text = self._clean_description(description)

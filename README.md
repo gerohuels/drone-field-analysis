@@ -35,7 +35,8 @@ python main.py
 3. Click **Browse** beside *SRT File* and choose the matching subtitle file containing GPS data.
 4. Press **Scan** to extract frames and analyze each one for bare spots.
 5. Detected spots appear in the **Found Elements** list as image thumbnails.
-6. Click any thumbnail to view the full image and its GPS coordinates.
+6. Click any thumbnail to view the full image with its GPS coordinates and raw
+   GPS text.
 7. When scanning finishes, press **Show on Map** to open a browser displaying all detections. Enable *Show Flight Path* to visualize the drone's route.
 
 ## Features
