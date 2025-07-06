@@ -15,11 +15,12 @@ def encode_image(image_path: str) -> str:
         return base64.b64encode(image_file.read()).decode("utf-8")
 
 
-def report_bare_spot(location: str, confidence: float) -> str:
-    """Return a two sentence description of a detected bare spot."""
+def report_bare_spot(location: str, confidence: float, box_paramter: str) -> str:
+    """Return a short description of a detected bare spot."""
     message = (
         f"A bare spot was detected at {location}. "
-        f"Detection confidence is {confidence:.2f}."
+        f"Detection confidence is {confidence:.2f}. "
+        f"Box coordinates: {box_paramter}."
     )
     print(f"✅ {message}")
     return message
@@ -38,8 +39,8 @@ def analyze_frame(image_path: str):
     dict | None
         Dictionary describing the bare spot if one is detected with high
         confidence. The dictionary contains ``object_type``, ``location``,
-        ``description``, ``confidence`` and ``bbox`` keys. If no bare spot is
-        found ``None`` is returned.
+        ``description``, ``confidence`` and ``box_paramter`` keys. If no bare
+        spot is found ``None`` is returned.
     """
     base64_image = encode_image(image_path)
     response = client.chat.completions.create(
@@ -58,7 +59,9 @@ def analyze_frame(image_path: str):
                             "possibly caused by machinery, drought, or compaction. "
                             "**Only call the `report_bare_spot` function if the bare soil area "
                             "is large and clearly distinct from healthy crop rows.** "
-                            "Respond in one short sentence."
+                            "Describe the bare spot in 1 sentence (e.g. are there cracks in the soil, "
+                            "is there a water deficit). "
+                            "Return the box coordinates of the spot as [x1, y1, x2, y2] for a 1920x1080 image."
                         ),
                     },
                     {
@@ -76,7 +79,7 @@ def analyze_frame(image_path: str):
                 "type": "function",
                 "function": {
                     "name": "report_bare_spot",
-                    "description": "Report a bare spot in the field if one is clearly visible.",
+                    "description": "Describe the bare spot in 1 Sentence e.g are there cracks in the soil, is there a water deficit",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -88,8 +91,13 @@ def analyze_frame(image_path: str):
                                 "type": "number",
                                 "description": "Confidence level from 0 to 1",
                             },
+                            "box_paramter": {
+                                "type": "array",
+                                "items": {"type": "integer"},
+                                "description": "Bounding box [x1, y1, x2, y2] using 1920x1080 image coordinates",
+                            },
                         },
-                        "required": ["location", "confidence"],
+                        "required": ["location", "confidence", "box_paramter"],
                     },
                 },
             }
@@ -104,13 +112,17 @@ def analyze_frame(image_path: str):
             if tool_call.function.name == "report_bare_spot":
                 args = json.loads(tool_call.function.arguments)
                 if args.get("confidence", 0) >= 0.85:
-                    report = report_bare_spot(args["location"], args["confidence"])
+                    report = report_bare_spot(
+                        args["location"],
+                        args["confidence"],
+                        str(args.get("box_paramter")),
+                    )
                     return {
                         "object_type": "bare spot",
                         "location": args["location"],
                         "confidence": args["confidence"],
                         "description": report,
-                        "bbox": None,
+                        "box_paramter": args.get("box_paramter"),
                     }
     return None
 

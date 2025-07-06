@@ -7,12 +7,13 @@ import base64
 
 import folium
 
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageDraw
 import pandas as pd
 
 from ..utils.frame_extractor import extract_frames_with_gps
 from ..utils.data_processing import analyze_frame
 from ..config.settings import OUTPUT_DIR
+
 
 class DroneFieldGUI(tk.Tk):
     def __init__(self):
@@ -30,7 +31,8 @@ class DroneFieldGUI(tk.Tk):
                 "object_type",
                 "description",
                 "confidence",
-                "bbox",
+                "box_paramter",
+                "boxed_image_path",
             ]
         )
 
@@ -41,31 +43,54 @@ class DroneFieldGUI(tk.Tk):
         self.create_widgets()
 
     def create_widgets(self):
-        tk.Label(self, text="Drone Field Analyzer", font=("Helvetica", 16, "bold")).grid(row=0, column=0, columnspan=3, pady=10)
+        tk.Label(
+            self, text="Drone Field Analyzer", font=("Helvetica", 16, "bold")
+        ).grid(row=0, column=0, columnspan=3, pady=10)
 
-        tk.Label(self, text="MP4 File:").grid(row=1, column=0, sticky="e", padx=5, pady=5)
-        tk.Entry(self, width=40, textvariable=self.mp4_path).grid(row=1, column=1, padx=5, pady=5)
-        tk.Button(self, text="Browse", command=self.browse_mp4).grid(row=1, column=2, padx=5, pady=5)
+        tk.Label(self, text="MP4 File:").grid(
+            row=1, column=0, sticky="e", padx=5, pady=5
+        )
+        tk.Entry(self, width=40, textvariable=self.mp4_path).grid(
+            row=1, column=1, padx=5, pady=5
+        )
+        tk.Button(self, text="Browse", command=self.browse_mp4).grid(
+            row=1, column=2, padx=5, pady=5
+        )
 
-        tk.Label(self, text="SRT File:").grid(row=2, column=0, sticky="e", padx=5, pady=5)
-        tk.Entry(self, width=40, textvariable=self.srt_path).grid(row=2, column=1, padx=5, pady=5)
-        tk.Button(self, text="Browse", command=self.browse_srt).grid(row=2, column=2, padx=5, pady=5)
-        tk.Button(self, text="Scan", command=self.scan).grid(row=4, column=0, columnspan=3, pady=10)
+        tk.Label(self, text="SRT File:").grid(
+            row=2, column=0, sticky="e", padx=5, pady=5
+        )
+        tk.Entry(self, width=40, textvariable=self.srt_path).grid(
+            row=2, column=1, padx=5, pady=5
+        )
+        tk.Button(self, text="Browse", command=self.browse_srt).grid(
+            row=2, column=2, padx=5, pady=5
+        )
+        tk.Button(self, text="Scan", command=self.scan).grid(
+            row=4, column=0, columnspan=3, pady=10
+        )
         tk.Label(self, text="Found Elements").grid(row=5, column=0, columnspan=3)
 
-
         self.results_canvas = tk.Canvas(self, width=400, height=200)
-        scrollbar = tk.Scrollbar(self, orient="vertical", command=self.results_canvas.yview)
+        scrollbar = tk.Scrollbar(
+            self, orient="vertical", command=self.results_canvas.yview
+        )
         self.results_canvas.configure(yscrollcommand=scrollbar.set)
 
-        self.results_canvas.grid(row=6, column=0, columnspan=3, padx=10, pady=5, sticky="nsew")
+        self.results_canvas.grid(
+            row=6, column=0, columnspan=3, padx=10, pady=5, sticky="nsew"
+        )
         scrollbar.grid(row=6, column=3, sticky="ns")
 
         self.results_container = tk.Frame(self.results_canvas)
-        self.results_canvas.create_window((0, 0), window=self.results_container, anchor="nw")
+        self.results_canvas.create_window(
+            (0, 0), window=self.results_container, anchor="nw"
+        )
         self.results_container.bind(
             "<Configure>",
-            lambda e: self.results_canvas.configure(scrollregion=self.results_canvas.bbox("all"))
+            lambda e: self.results_canvas.configure(
+                scrollregion=self.results_canvas.bbox("all")
+            ),
         )
 
         self.show_map_button = tk.Button(
@@ -82,8 +107,6 @@ class DroneFieldGUI(tk.Tk):
             text="Show Flight Path",
             variable=self.show_path_var,
         ).grid(row=8, column=0, columnspan=3)
-
-
 
     def browse_mp4(self):
         path = filedialog.askopenfilename(filetypes=[("MP4 files", "*.mp4")])
@@ -112,7 +135,7 @@ class DroneFieldGUI(tk.Tk):
         tk.Label(top, text=info, font=("Arial", 12)).pack(pady=10)
 
     def add_finding(self, row):
-        filename = row["image_path"]
+        filename = row.get("boxed_image_path") or row["image_path"]
         description = row["description"]
         lat = row["latitude"]
         lon = row["longitude"]
@@ -127,10 +150,14 @@ class DroneFieldGUI(tk.Tk):
         img_label.pack(side="left")
         img_label.bind(
             "<Button-1>",
-            lambda e, p=filename, d=description, la=lat, lo=lon: self.show_full_image(p, d, la, lo),
+            lambda e, p=filename, d=description, la=lat, lo=lon: self.show_full_image(
+                p, d, la, lo
+            ),
         )
         text = f"Lat: {lat}\nLon: {lon}\n{description}"
-        tk.Label(frame, text=text, justify="left", wraplength=250).pack(side="left", padx=5)
+        tk.Label(frame, text=text, justify="left", wraplength=250).pack(
+            side="left", padx=5
+        )
 
         # ``pack(before=...)`` raises ``TclError`` if the referenced widget is
         # not currently managed by ``pack``. Using ``pack_slaves`` ensures that
@@ -158,7 +185,7 @@ class DroneFieldGUI(tk.Tk):
         mymap = folium.Map(location=map_center, zoom_start=15)
 
         for _, entry in found_df.iterrows():
-            image_path = entry["image_path"]
+            image_path = entry.get("boxed_image_path") or entry["image_path"]
             image_file = os.path.basename(image_path)
 
             # 🔧 Read image and convert to base64
@@ -170,13 +197,13 @@ class DroneFieldGUI(tk.Tk):
                 img_base64 = ""
 
             # 🖼️ Create HTML content with base64 image embedded
-            image_html = f'''
+            image_html = f"""
                 <div>
                     <strong>{entry["description"]}</strong><br>
                     <img src="data:image/jpeg;base64,{img_base64}" width="200"><br>
                     <small>{image_file}</small>
                 </div>
-            '''
+            """
             iframe = folium.IFrame(html=image_html, width=220, height=250)
             popup = folium.Popup(iframe, max_width=250)
 
@@ -198,7 +225,6 @@ class DroneFieldGUI(tk.Tk):
         abs_map_path = os.path.abspath(output_map)
         webbrowser.open_new_tab(f"file://{abs_map_path}")
 
-
     def add_flight_path(self, mymap):
         """Add a polyline showing the drone's path to ``mymap`` if enabled."""
         if not self.data.empty and self.show_path_var.get():
@@ -216,13 +242,13 @@ class DroneFieldGUI(tk.Tk):
                     opacity=0.7,
                 ).add_to(mymap)
 
-
-
     def scan(self):
         mp4 = self.mp4_path.get()
         srt = self.srt_path.get()
         if not mp4 or not srt:
-            messagebox.showerror("Missing Files", "Please select both MP4 and SRT files before scanning.")
+            messagebox.showerror(
+                "Missing Files", "Please select both MP4 and SRT files before scanning."
+            )
             return
 
         if self.show_map_button:
@@ -237,13 +263,30 @@ class DroneFieldGUI(tk.Tk):
                     self.data.at[idx, "object_type"] = result["object_type"]
                     self.data.at[idx, "description"] = result["description"]
                     self.data.at[idx, "confidence"] = result["confidence"]
-                    self.data.at[idx, "bbox"] = result["bbox"]
+                    self.data.at[idx, "box_paramter"] = result.get("box_paramter")
+                    boxed_path = row["image_path"]
+                    if result.get("box_paramter"):
+                        try:
+                            img = Image.open(row["image_path"])
+                            draw = ImageDraw.Draw(img)
+                            draw.rectangle(
+                                tuple(result["box_paramter"]), outline="blue", width=5
+                            )
+                            boxed_path = (
+                                row["image_path"].rsplit(".", 1)[0] + "_boxed.jpg"
+                            )
+                            img.save(boxed_path)
+                        except Exception as e:
+                            print(f"Failed to draw box on {row['image_path']}: {e}")
+                            boxed_path = row["image_path"]
+                    self.data.at[idx, "boxed_image_path"] = boxed_path
                     self.add_finding(self.data.loc[idx])
             messagebox.showinfo("Scan Complete", f"Frames saved to '{output_dir}'")
             if self.show_map_button:
                 self.show_map_button.config(state="normal")
         except Exception as exc:
             messagebox.showerror("Error", str(exc))
+
 
 if __name__ == "__main__":
     app = DroneFieldGUI()
