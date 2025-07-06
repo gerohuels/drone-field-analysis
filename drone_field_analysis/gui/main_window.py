@@ -133,6 +133,12 @@ class DroneFieldGUI(tk.Tk):
         if path:
             self.srt_path.set(path)
 
+    def _clean_description(self, description: str) -> str:
+        """Return ``description`` without any box coordinate text."""
+        if "Box coordinates:" in description:
+            return description.split("Box coordinates:")[0].strip()
+        return description
+
     def show_full_image(self, img_path: str, description: str, lat, lon) -> None:
         """Display a larger preview of a detection.
 
@@ -156,7 +162,8 @@ class DroneFieldGUI(tk.Tk):
         img_label.image = img_photo  # keep reference
         img_label.pack()
 
-        info = f"Lat: {lat}\nLon: {lon}\n{description}"
+        clean_desc = self._clean_description(description)
+        info = f"Lat: {lat}\nLon: {lon}\n{clean_desc}"
         tk.Label(top, text=info, font=("Arial", 12)).pack(pady=10)
 
     def add_finding(self, row):
@@ -181,7 +188,7 @@ class DroneFieldGUI(tk.Tk):
                 p, d, la, lo
             ),
         )
-        text = f"{description}"
+        text = self._clean_description(description)
         tk.Label(frame, text=text, justify="left", wraplength=250).pack(
             side="left", padx=5
         )
@@ -212,7 +219,7 @@ class DroneFieldGUI(tk.Tk):
         for _, entry in found_df.iterrows():
             image_path = entry.get("boxed_image_path") or entry["image_path"]
             image_file = os.path.basename(image_path)
-
+            
             # 🔧 Read image and convert to base64
             try:
                 with open(image_path, "rb") as img_file:
@@ -222,19 +229,18 @@ class DroneFieldGUI(tk.Tk):
                 img_base64 = ""
 
             # 🖼️ Create HTML content with base64 image embedded
+            clean_desc = self._clean_description(entry["description"])
             image_html = f"""
                 <div>
-                    <strong>{entry["description"]}</strong><br>
-                    <img src="data:image/jpeg;base64,{img_base64}" width="200"><br>
-                    <small>{image_file}</small>
+                    <strong>{clean_desc}</strong><br>
+                    <img src="data:image/jpeg;base64,{img_base64}" width="200">
                 </div>
             """
             iframe = folium.IFrame(html=image_html, width=220, height=250)
             popup = folium.Popup(iframe, max_width=250)
 
             # Tooltip as plain text only (image in tooltip not reliable)
-            #tooltip = entry["description"]
-            tooltip ="Bare Spot"
+            tooltip = self._clean_description(entry["description"])
             folium.Marker(
                 location=[entry["latitude"], entry["longitude"]],
                 popup=popup,
