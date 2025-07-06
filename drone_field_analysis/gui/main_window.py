@@ -145,6 +145,7 @@ class DroneFieldGUI(tk.Tk):
         photo = cast(tk.PhotoImage, ImageTk.PhotoImage(thumb))
         self.result_images.append(photo)
 
+        #Klick on full thumbnail for full-image
         frame = tk.Frame(self.results_container, bd=1, relief="solid", padx=5, pady=5)
         img_label = tk.Label(frame, image=photo, cursor="hand2")
         img_label.pack(side="left")
@@ -154,15 +155,11 @@ class DroneFieldGUI(tk.Tk):
                 p, d, la, lo
             ),
         )
-        text = f"Lat: {lat}\nLon: {lon}\n{description}"
+        text = f"{description}"
         tk.Label(frame, text=text, justify="left", wraplength=250).pack(
             side="left", padx=5
         )
 
-        # ``pack(before=...)`` raises ``TclError`` if the referenced widget is
-        # not currently managed by ``pack``. Using ``pack_slaves`` ensures that
-        # we only reference widgets already packed, preventing the
-        # ``isn't packed`` error reported by some users.
         packed_children = self.results_container.pack_slaves()
         if packed_children:
             frame.pack(fill="x", padx=5, pady=5, before=packed_children[0])
@@ -170,6 +167,7 @@ class DroneFieldGUI(tk.Tk):
             frame.pack(fill="x", padx=5, pady=5)
 
     def show_map(self):
+
         found_df = self.data.dropna(subset=["object_type"])
         if found_df.empty:
             messagebox.showinfo("No Findings", "No findings to display on the map.")
@@ -208,8 +206,8 @@ class DroneFieldGUI(tk.Tk):
             popup = folium.Popup(iframe, max_width=250)
 
             # Tooltip as plain text only (image in tooltip not reliable)
-            tooltip = entry["description"]
-
+            #tooltip = entry["description"]
+            tooltip ="Bare Spot"
             folium.Marker(
                 location=[entry["latitude"], entry["longitude"]],
                 popup=popup,

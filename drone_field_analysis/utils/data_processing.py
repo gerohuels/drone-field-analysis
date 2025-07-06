@@ -15,14 +15,14 @@ def encode_image(image_path: str) -> str:
         return base64.b64encode(image_file.read()).decode("utf-8")
 
 
-def report_bare_spot(location: str, confidence: float, box_paramter: str) -> str:
+def report_bare_spot(report: str, confidence: float, box_paramter: str) -> str:
     """Return a short description of a detected bare spot."""
     message = (
-        f"A bare spot was detected at {location}. "
-        f"Detection confidence is {confidence:.2f}. "
+        f"Report: {report} \n"
+        f"Detection confidence is {confidence:.2f}. \n"
         f"Box coordinates: {box_paramter}."
     )
-    print(f"✅ {message}")
+    print(f"🔍 {message}")
     return message
 
 
@@ -79,13 +79,13 @@ def analyze_frame(image_path: str):
                 "type": "function",
                 "function": {
                     "name": "report_bare_spot",
-                    "description": "Describe the bare spot in 1 Sentence e.g are there cracks in the soil, is there a water deficit",
+                    "description": "Funktion to report found bare spots",
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "location": {
+                            "report": {
                                 "type": "string",
-                                "description": "Estimated location of the bare spot in the frame",
+                                "description": "Describe the bare spot in 1 Sentence e.g are there cracks in the soil, is there a water deficit",
                             },
                             "confidence": {
                                 "type": "number",
@@ -97,7 +97,7 @@ def analyze_frame(image_path: str):
                                 "description": "Bounding box [x1, y1, x2, y2] using 1920x1080 image coordinates",
                             },
                         },
-                        "required": ["location", "confidence", "box_paramter"],
+                        "required": ["report", "confidence", "box_paramter"],
                     },
                 },
             }
@@ -113,13 +113,13 @@ def analyze_frame(image_path: str):
                 args = json.loads(tool_call.function.arguments)
                 if args.get("confidence", 0) >= 0.85:
                     report = report_bare_spot(
-                        args["location"],
+                        args["report"],
                         args["confidence"],
                         str(args.get("box_paramter")),
                     )
                     return {
                         "object_type": "bare spot",
-                        "location": args["location"],
+                        "report": args["report"],
                         "confidence": args["confidence"],
                         "description": report,
                         "box_paramter": args.get("box_paramter"),
