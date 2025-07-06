@@ -41,13 +41,15 @@ def parse_coordinates(gps_text: str):
     return None, None
 
 
-def extract_frames_with_gps(video_path: str, srt_path: str, output_folder: str) -> pd.DataFrame:
+def extract_frames_with_gps(
+    video_path: str, srt_path: str, output_folder: str
+) -> pd.DataFrame:
     """Save one frame per second of ``video_path`` along with GPS data.
 
     Returns a ``pandas.DataFrame`` with the columns ``frame`` and ``image_path``
     populated. Additional columns ``object_type``, ``description``,
-    ``confidence`` and ``bbox`` are included for later population during object
-    detection. Latitude/longitude information is also stored for mapping
+    ``confidence`` and ``box_paramter`` are included for later population during
+    object detection. Latitude/longitude information is also stored for mapping
     purposes.
 
     Parameters
@@ -88,7 +90,8 @@ def extract_frames_with_gps(video_path: str, srt_path: str, output_folder: str) 
                     "object_type": None,
                     "description": None,
                     "confidence": None,
-                    "bbox": None,
+                    "box_paramter": None,
+                    "boxed_image_path": None,
                 }
             )
             print(f"Saved frame {sec}s -> {filename}")
@@ -109,7 +112,8 @@ def extract_frames_with_gps(video_path: str, srt_path: str, output_folder: str) 
             "object_type",
             "description",
             "confidence",
-            "bbox",
+            "box_paramter",
+            "boxed_image_path",
         ],
     )
     return df
