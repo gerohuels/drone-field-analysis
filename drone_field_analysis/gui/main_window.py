@@ -170,7 +170,7 @@ class DroneFieldGUI(tk.Tk):
         img_label.image = img_photo  # keep reference
         img_label.pack()
 
-        info_lines = [f"Lat: {lat}", f"Lon: {lon}"]
+        info_lines = []
         if gps_text:
             info_lines.append(f"GPS: {gps_text}")
         info_lines.append(f"Report: {report}")
