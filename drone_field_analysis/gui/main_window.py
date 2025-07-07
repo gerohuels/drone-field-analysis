@@ -39,6 +39,7 @@ class DroneFieldGUI(tk.Tk):
                 "longitude",
                 "gps_text",
                 "object_type",
+                "report",
                 "description",
                 "confidence",
                 "box_parameter",
@@ -140,14 +141,15 @@ class DroneFieldGUI(tk.Tk):
         if path:
             self.srt_path.set(path)
 
-    def _clean_description(self, description: str) -> str:
-        """Return ``description`` without any box coordinate text."""
-        if "Box coordinates:" in description:
-            return description.split("Box coordinates:")[0].strip()
-        return description
 
     def show_full_image(
-        self, img_path: str, description: str, lat, lon, gps_text: str = ""
+        self,
+        img_path: str,
+        report: str,
+        confidence: float,
+        lat,
+        lon,
+        gps_text: str = "",
     ) -> None:
         """Display a larger preview of a detection.
 
@@ -155,8 +157,10 @@ class DroneFieldGUI(tk.Tk):
         ----------
         img_path:
             Path to the image file to display.
-        description:
-            Short text describing the detection.
+        report:
+            Text describing the detected bare spot.
+        confidence:
+            Confidence score returned by the detection model.
         lat, lon:
             GPS coordinates associated with the frame.
         gps_text:
@@ -174,18 +178,20 @@ class DroneFieldGUI(tk.Tk):
         img_label.image = img_photo  # keep reference
         img_label.pack()
 
-        clean_desc = self._clean_description(description)
         info_lines = [f"Lat: {lat}", f"Lon: {lon}"]
         if self.show_gps_var.get() and gps_text:
             info_lines.append(f"GPS: {gps_text}")
-        info_lines.append(clean_desc)
+        info_lines.append(f"Report: {report}")
+        info_lines.append(f"Confidence: {confidence:.2f}")
         info = "\n".join(info_lines)
         tk.Label(top, text=info, font=("Arial", 12)).pack(pady=10)
 
     def add_finding(self, row):
         """Insert a detected bare spot into the results list."""
         filename = row.get("boxed_image_path") or row["image_path"]
-        description = row["description"]
+        report = row.get("report") or ""
+        confidence = row.get("confidence")
+        object_type = row.get("object_type")
         lat = row["latitude"]
         lon = row["longitude"]
         gps_text = row["gps_text"]
@@ -201,11 +207,11 @@ class DroneFieldGUI(tk.Tk):
         img_label.pack(side="left")
         img_label.bind(
             "<Button-1>",
-            lambda e, p=filename, d=description, la=lat, lo=lon, g=gps_text: self.show_full_image(
-                p, d, la, lo, g
+            lambda e, p=filename, r=report, c=confidence, la=lat, lo=lon, g=gps_text: self.show_full_image(
+                p, r, c, la, lo, g
             ),
         )
-        text = self._clean_description(description)
+        text = f"Report: {report}\nFinding: {object_type}"
         tk.Label(frame, text=text, justify="left", wraplength=250).pack(
             side="left", padx=5
         )
@@ -246,10 +252,10 @@ class DroneFieldGUI(tk.Tk):
                 img_base64 = ""
 
             # 🖼️ Create HTML content with base64 image embedded
-            clean_desc = self._clean_description(entry["description"])
+            report_text = entry.get("report", "")
             image_html = f"""
                 <div>
-                    <strong>{clean_desc}</strong><br>
+                    <strong>{report_text}</strong><br>
                     <img src="data:image/jpeg;base64,{img_base64}" width="200">
                 </div>
             """
@@ -257,7 +263,7 @@ class DroneFieldGUI(tk.Tk):
             popup = folium.Popup(iframe, max_width=250)
 
             # Tooltip as plain text only (image in tooltip not reliable)
-            tooltip = self._clean_description(entry["description"])
+            tooltip = entry.get("object_type", "")
             folium.Marker(
                 location=[entry["latitude"], entry["longitude"]],
                 popup=popup,
@@ -311,6 +317,7 @@ class DroneFieldGUI(tk.Tk):
                 result = analyze_frame(row["image_path"])
                 if result:
                     self.data.at[idx, "object_type"] = result["object_type"]
+                    self.data.at[idx, "report"] = result["report"]
                     self.data.at[idx, "description"] = result["description"]
                     self.data.at[idx, "confidence"] = result["confidence"]
                     self.data.at[idx, "box_parameter"] = result.get("box_parameter")
