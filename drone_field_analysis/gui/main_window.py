@@ -3,7 +3,7 @@
 import logging
 import tkinter as tk
 
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, ttk
 from typing import cast
 import os
 import webbrowser
@@ -114,12 +114,24 @@ class DroneFieldGUI(tk.Tk):
         )
         self.show_map_button.grid(row=7, column=0, columnspan=3, pady=10)
 
+        # Separator line above utility options
+        ttk.Separator(self, orient="horizontal").grid(
+            row=8, column=0, columnspan=3, sticky="ew", pady=(0, 5)
+        )
+
         self.show_path_var = tk.BooleanVar(value=True)
         tk.Checkbutton(
             self,
             text="Show Flight Path",
             variable=self.show_path_var,
-        ).grid(row=8, column=0, columnspan=3)
+        ).grid(row=9, column=0, columnspan=3)
+
+        self.show_gps_var = tk.BooleanVar(value=True)
+        tk.Checkbutton(
+            self,
+            text="Show Raw GPS Data",
+            variable=self.show_gps_var,
+        ).grid(row=10, column=0, columnspan=3)
 
     def browse_mp4(self):
         """Prompt the user to select an MP4 file."""
@@ -153,7 +165,9 @@ class DroneFieldGUI(tk.Tk):
         lat, lon:
             GPS coordinates associated with the frame.
         gps_text:
-            Raw GPS text from the subtitle track.
+            Raw GPS text from the subtitle track. Display of the GPS
+            coordinates and this value can be toggled using the
+            *Show Raw GPS Data* option in the main window.
         """
         top = tk.Toplevel(self)
         top.title("Image Viewer")
@@ -167,9 +181,11 @@ class DroneFieldGUI(tk.Tk):
         img_label.pack()
 
         clean_desc = self._clean_description(description)
-        info_lines = [f"Lat: {lat}", f"Lon: {lon}"]
-        if gps_text:
-            info_lines.append(f"GPS: {gps_text}")
+        info_lines = []
+        if self.show_gps_var.get():
+            info_lines.extend([f"Lat: {lat}", f"Lon: {lon}"])
+            if gps_text:
+                info_lines.append(f"GPS: {gps_text}")
         info_lines.append(clean_desc)
         info = "\n".join(info_lines)
         tk.Label(top, text=info, font=("Arial", 12)).pack(pady=10)
