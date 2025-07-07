@@ -160,8 +160,9 @@ class DroneFieldGUI(tk.Tk):
         lat, lon:
             GPS coordinates associated with the frame.
         gps_text:
-            Raw GPS text from the subtitle track. Display of this value can be
-            toggled using the *Show Raw GPS Data* option in the main window.
+            Raw GPS text from the subtitle track. Display of the GPS
+            coordinates and this value can be toggled using the
+            *Show Raw GPS Data* option in the main window.
         """
         top = tk.Toplevel(self)
         top.title("Image Viewer")
@@ -175,9 +176,11 @@ class DroneFieldGUI(tk.Tk):
         img_label.pack()
 
         clean_desc = self._clean_description(description)
-        info_lines = [f"Lat: {lat}", f"Lon: {lon}"]
-        if self.show_gps_var.get() and gps_text:
-            info_lines.append(f"GPS: {gps_text}")
+        info_lines = []
+        if self.show_gps_var.get():
+            info_lines.extend([f"Lat: {lat}", f"Lon: {lon}"])
+            if gps_text:
+                info_lines.append(f"GPS: {gps_text}")
         info_lines.append(clean_desc)
         info = "\n".join(info_lines)
         tk.Label(top, text=info, font=("Arial", 12)).pack(pady=10)
