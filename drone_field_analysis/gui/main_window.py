@@ -30,6 +30,7 @@ class DroneFieldGUI(tk.Tk):
         self.title("Drone Field Analyzer")
         self.mp4_path = tk.StringVar()
         self.srt_path = tk.StringVar()
+        self.search_for = tk.StringVar(value="Bare spots")
         # Store metadata and detection results for each extracted frame
         self.data = pd.DataFrame(
             columns=[
@@ -80,6 +81,17 @@ class DroneFieldGUI(tk.Tk):
         tk.Button(self, text="Browse", command=self.browse_srt).grid(
             row=2, column=2, padx=5, pady=5
         )
+
+        tk.Label(self, text="Look For:").grid(
+            row=3, column=0, sticky="e", padx=5, pady=5
+        )
+        tk.OptionMenu(
+            self,
+            self.search_for,
+            "Bare spots",
+            "Animals",
+            "Bare spots and animals",
+        ).grid(row=3, column=1, columnspan=2, padx=5, pady=5, sticky="w")
         tk.Button(self, text="Scan", command=self.scan).grid(
             row=4, column=0, columnspan=3, pady=10
         )
@@ -289,7 +301,7 @@ class DroneFieldGUI(tk.Tk):
                 ).add_to(mymap)
 
     def scan(self):
-        """Run frame extraction and bare spot detection."""
+        """Run frame extraction and object detection based on user choice."""
         mp4 = self.mp4_path.get()
         srt = self.srt_path.get()
         if not mp4 or not srt:
@@ -306,7 +318,7 @@ class DroneFieldGUI(tk.Tk):
         try:
             self.data = extract_frames_with_gps(mp4, srt, output_dir)
             for idx, row in self.data.iterrows():
-                result = analyze_frame(row["image_path"])
+                result = analyze_frame(row["image_path"], self.search_for.get())
                 if result:
                     self.data.at[idx, "object_type"] = result["object_type"]
                     self.data.at[idx, "report"] = result["report"]
