@@ -1,4 +1,4 @@
-"""Bare spot detection routines using the OpenAI API."""
+"""Detection routines using the OpenAI API."""
 
 import base64
 import json
@@ -23,11 +23,11 @@ def encode_image(image_path: str) -> str:
         return base64.b64encode(image_file.read()).decode("utf-8")
 
 
-def report_bare_spot(report: str, confidence: float, box_parameter: str) -> str:
-    """Return a short description of a detected bare spot.
+def report_object(report: str, confidence: float, box_parameter: str) -> str:
+    """Return a short description of a detected object.
 
-    This function mirrors the schema expected by the OpenAI function calling
-    API. It is invoked by the language model when a bare spot is found with
+    This helper mirrors the schema expected by the OpenAI function calling
+    API. The language model invokes it when an object is found with
     sufficient confidence.
     """
     message = (
@@ -39,8 +39,35 @@ def report_bare_spot(report: str, confidence: float, box_parameter: str) -> str:
     return message
 
 
-def analyze_frame(image_path: str):
-    """Analyze a frame for bare spots using the OpenAI API.
+def _get_prompt(object_type: str) -> str:
+    """Return the prompt for ``object_type``."""
+
+    if object_type == "animal":
+        return (
+            "Analyze this frame of the field and identify any animals. "
+            "Only call the `report_object` function if the animal is clearly visible "
+            "and not a distant speck or shadow. "
+            "Describe the animal in 1 sentence. "
+            "Return the box coordinates of the animal as [x1, y1, x2, y2] for a 1920x1080 image."
+        )
+
+    # default to bare spot detection
+    return (
+        "Analyze this frame of the field and identify any bare spots. "
+        "A bare spot is defined as a **large, clearly visible patch of exposed soil** "
+        "with **no visible crop growth**, not just a small gap between plants. "
+        "These areas often appear as dark, compacted zones, paths, or spots, "
+        "possibly caused by machinery, drought, or compaction. "
+        "**Only call the `report_object` function if the bare soil area "
+        "is large and clearly distinct from healthy crop rows.** "
+        "Describe the bare spot in 1 sentence (e.g. are there cracks in the soil, "
+        "is there a water deficit). "
+        "Return the box coordinates of the spot as [x1, y1, x2, y2] for a 1920x1080 image."
+    )
+
+
+def analyze_frame(image_path: str, object_type: str):
+    """Analyze ``image_path`` for ``object_type`` using the OpenAI API.
 
     Parameters
     ----------
@@ -57,27 +84,14 @@ def analyze_frame(image_path: str):
     """
     # Convert the frame to a base64 string and send it to the vision model
     base64_image = encode_image(image_path)
+    prompt_text = _get_prompt(object_type)
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
             {
                 "role": "user",
                 "content": [
-                    {
-                        "type": "text",
-                        "text": (
-                            "Analyze this frame of the field and identify any bare spots. "
-                            "A bare spot is defined as a **large, clearly visible patch of exposed soil** "
-                            "with **no visible crop growth**, not just a small gap between plants. "
-                            "These areas often appear as dark, compacted zones, paths, or spots, "
-                            "possibly caused by machinery, drought, or compaction. "
-                            "**Only call the `report_bare_spot` function if the bare soil area "
-                            "is large and clearly distinct from healthy crop rows.** "
-                            "Describe the bare spot in 1 sentence (e.g. are there cracks in the soil, "
-                            "is there a water deficit). "
-                            "Return the box coordinates of the spot as [x1, y1, x2, y2] for a 1920x1080 image."
-                        ),
-                    },
+                    {"type": "text", "text": prompt_text},
                     {
                         "type": "image_url",
                         "image_url": {
@@ -92,14 +106,14 @@ def analyze_frame(image_path: str):
             {
                 "type": "function",
                 "function": {
-                    "name": "report_bare_spot",
-                    "description": "Funktion to report found bare spots",
+                    "name": "report_object",
+                    "description": "Function to report found objects",
                     "parameters": {
                         "type": "object",
                         "properties": {
                             "report": {
                                 "type": "string",
-                                "description": "Describe the bare spot in 1 Sentence e.g are there cracks in the soil, is there a water deficit",
+                                "description": "Description of the detected object in one sentence",
                             },
                             "confidence": {
                                 "type": "number",
@@ -120,23 +134,23 @@ def analyze_frame(image_path: str):
         max_tokens=100,
     )
 
-    # The model may decide to call ``report_bare_spot`` with its findings
+    # The model may decide to call ``report_object`` with its findings
     tool_calls = response.choices[0].message.tool_calls
     if tool_calls:
         # Iterate over any function calls returned by the model
         for tool_call in tool_calls:
-            if tool_call.function.name == "report_bare_spot":
+            if tool_call.function.name == "report_object":
                 args = json.loads(tool_call.function.arguments)
                 # Only accept detections with reasonably high confidence
                 if args.get("confidence", 0) >= 0.85:
-                    report = report_bare_spot(
+                    report = report_object(
                         args["report"],
                         args["confidence"],
                         str(args.get("box_parameter")),
                     )
                     return {
                         # Information stored back into the DataFrame
-                        "object_type": "bare spot",
+                        "object_type": object_type,
                         "report": args["report"],
                         "confidence": args["confidence"],
                         "description": report,
@@ -148,4 +162,4 @@ def analyze_frame(image_path: str):
 if __name__ == "__main__":
     # Simple manual test when running this file directly
     sample_path = os.path.join(OUTPUT_DIR, "frame_013.jpg")
-    analyze_frame(sample_path)
+    analyze_frame(sample_path, "bare spot")
