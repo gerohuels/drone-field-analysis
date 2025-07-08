@@ -46,6 +46,8 @@ python main.py
 - Optionally draws a bounding box around each detection on the saved frame.
 - Scrollable interface with thumbnails and descriptions of all findings.
 - Interactive map showing detections and the drone's flight path.
+- Drop-down menu lets you search for **Bare spots**, **Animals** or **Both**.
+- Well-commented source code for easier customization.
 
 ### Dependencies
 
@@ -56,9 +58,9 @@ python main.py
 - [Folium](https://github.com/python-visualization/folium) - Renders the interactive map with popups.
 - [pandas](https://pandas.pydata.org/) - Stores extraction and detection results in a single DataFrame.
 
-## Future Features
+## Known Bugs
 
-- Searching for animals in the field
+- Bounding boxes drawn around detected objects are sometimes imprecise.
 
 ### Acknowledgments
 This project uses the Pandas library, © The Pandas Development Team, licensed under the BSD 3-Clause License.
