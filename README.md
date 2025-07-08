@@ -1,8 +1,8 @@
 # drone-field-analysis
-An application for analyzing drone footage to **find bare spots in a field** and assess overall crop health. Detected areas are visualized on an interactive field map.
+An application for analyzing drone footage to **find bare spots or animals** in a field and assess overall crop health. Detected areas are visualized on an interactive field map.
 
 The application processes `.mp4` video footage of the field along with a corresponding `.srt` file that contains GPS location data from the drone.
-It identifies bare soil patches in the field, saving frames where such areas are found along with their GPS coordinates.
+It can identify bare soil patches or animals in the field, saving frames where such areas are found along with their GPS coordinates.
 All detections are visualized on a field map for easy monitoring and analysis. Each marker opens a popup containing a preview image for quick review.
 
 The GUI presents a scrollable list of all findings. Clicking a thumbnail opens the full-size frame along with its GPS information.
@@ -33,7 +33,7 @@ python main.py
 1. Launch the program with the command above. The main window opens.
 2. Click **Browse** beside *MP4 File* and select your drone video.
 3. Click **Browse** beside *SRT File* and choose the matching subtitle file containing GPS data.
-4. Press **Scan** to extract frames and analyze each one for bare spots.
+4. Choose whether to search for *Bare spots*, *Animals* or *Both* and press **Scan** to analyze each extracted frame.
 5. Detected spots appear in the **Found Elements** list as image thumbnails.
 6. Click any thumbnail to view the full image with its GPS coordinates. Use the
    *Show Raw GPS Data* checkbox to display or hide the subtitle's raw GPS text.
@@ -42,7 +42,7 @@ python main.py
 ## Features
 
 - Extracts one frame per second from the footage and stores its GPS location.
-- Uses the OpenAI GPT-4o model to spot large bare soil areas.
+- Uses the OpenAI GPT-4o model to spot large bare soil areas or animals depending on the selected option.
 - Optionally draws a bounding box around each detection on the saved frame.
 - Scrollable interface with thumbnails and descriptions of all findings.
 - Interactive map showing detections and the drone's flight path.
