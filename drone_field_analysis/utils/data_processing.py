@@ -98,7 +98,7 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
             }
         )
         prompt_parts.append(
-            "- **Bare spots**: clearly visible large patches of exposed soil with no visible crop growth."
+            "- **Bare spots**: Bare spots: Large, clearly visible patches of exposed soil with no signs of crop growth. These areas appear as uncovered earth — typically light brown or tan — with no green vegetation, leaves, or canopy overhead. A valid bare spot must be at least 5x5 cm in real-world size, fully free from crops, shadow, debris, or partial coverage. The soil surface should be unobstructed and distinctly visible from above."
         )
 
     if "animal" in look_for.lower():
@@ -130,6 +130,7 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
     )
     prompt_text = "\n".join(prompt_parts)
 
+    #
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
