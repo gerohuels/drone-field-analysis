@@ -47,7 +47,6 @@ python main.py
 - Scrollable interface with thumbnails and descriptions of all findings.
 - Interactive map showing detections and the drone's flight path.
 - Drop-down menu lets you search for **Bare spots**, **Animals** or **Both**.
-- Well-commented source code for easier customization.
 
 ### Dependencies
 
