@@ -84,6 +84,8 @@ class DroneFieldGUI(tk.Tk):
         tk.Label(self, text="Look For:").grid(
             row=3, column=0, sticky="e", padx=5, pady=5
         )
+        # The option menu allows users to specify what objects should be
+        # detected in each frame. Choices are bare spots, animals or both.
         self.look_for_var = tk.StringVar(value="Bare spots")
         options = ["Bare spots", "Animals", "Both"]
         tk.OptionMenu(self, self.look_for_var, *options).grid(
@@ -328,6 +330,9 @@ class DroneFieldGUI(tk.Tk):
                 self.data.at[idx, "confidence"] = result.get("confidence")
                 self.data.at[idx, "box_parameter"] = result.get("box_parameter")
                 boxed_path = row["image_path"]
+                # Draw the bounding box returned by the detection model.
+                # Coordinates are sometimes off, so the box may not perfectly
+                # match the object on screen.
                 if result.get("box_parameter"):
                     try:
                         img = Image.open(row["image_path"])

@@ -130,7 +130,9 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
     )
     prompt_text = "\n".join(prompt_parts)
 
-    #
+    # Send the prepared prompt and image to the OpenAI API. The API
+    # will call our ``report_*`` functions if it detects any matching
+    # objects in the frame.
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[

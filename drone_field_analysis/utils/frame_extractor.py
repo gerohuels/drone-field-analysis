@@ -47,6 +47,8 @@ def parse_coordinates(gps_text: str):
     and returns them as ``(lat, lon)`` if found. If parsing fails ``(None, None)``
     is returned.
     """
+    # Search the text for floating point numbers that look like
+    # latitude and longitude values.
     numbers = re.findall(r"-?\d+\.\d+", gps_text)
     if len(numbers) >= 2:
         return float(numbers[0]), float(numbers[1])
@@ -85,7 +87,8 @@ def extract_frames_with_gps(
 
     rows = []
 
-    # iterate through the video one second at a time
+    # Iterate through the video one second at a time and save each frame
+    # together with the corresponding GPS information from the subtitle file.
     for sec in range(duration):
         # Jump to the correct timestamp and grab a frame
         vidcap.set(cv2.CAP_PROP_POS_MSEC, sec * 1000)
