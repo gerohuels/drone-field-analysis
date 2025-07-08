@@ -1,4 +1,9 @@
-"""Bare spot detection routines using the OpenAI API."""
+"""Image analysis helpers using the OpenAI API.
+
+This module provides utilities for detecting bare soil areas and animals in
+drone footage.  The :func:`analyze_frame` function dynamically builds the prompt
+and tool definitions based on what the user wants to look for.
+"""
 
 import base64
 import json
@@ -39,8 +44,22 @@ def report_bare_spot(report: str, confidence: float, box_parameter: str) -> str:
     return message
 
 
-def analyze_frame(image_path: str):
-    """Analyze a frame for bare spots using the OpenAI API.
+def report_animal(
+    species: str, description: str, confidence: float, box_parameter: str
+) -> str:
+    """Return a short description of a detected animal."""
+    message = (
+        f"Species: {species} \n"
+        f"Description: {description} \n"
+        f"Detection confidence is {confidence:.2f}. \n"
+        f"Box coordinates: {box_parameter}."
+    )
+    logger.info("\N{dog} %s", message)
+    return message
+
+
+def analyze_frame(image_path: str, look_for: str = "bare spot"):
+    """Analyze a frame using the OpenAI API.
 
     Parameters
     ----------
@@ -50,99 +69,115 @@ def analyze_frame(image_path: str):
     Returns
     -------
     dict | None
-        Dictionary describing the bare spot if one is detected with high
-        confidence. The dictionary contains ``object_type``, ``location``,
-        ``description``, ``confidence`` and ``box_parameter`` keys. If no bare
-        spot is found ``None`` is returned.
+        List with dictionaries describing any detected objects. Each dictionary
+        contains ``object_type``, ``description``, ``confidence`` and
+        ``box_parameter`` keys. ``None`` is returned when nothing is found.
     """
-    # Convert the frame to a base64 string and send it to the vision model
     base64_image = encode_image(image_path)
+
+    tools = []
+    prompt_parts = ["Analyze this frame and identify any of the following objects:"]
+
+    if "bare spot" in look_for.lower():
+        tools.append(
+            {
+                "type": "function",
+                "function": {
+                    "name": "report_bare_spot",
+                    "description": "Function to report bare spots in the field",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "report": {"type": "string"},
+                            "confidence": {"type": "number"},
+                            "box_parameter": {"type": "array", "items": {"type": "integer"}},
+                        },
+                        "required": ["report", "confidence", "box_parameter"],
+                    },
+                },
+            }
+        )
+        prompt_parts.append(
+            "- **Bare spots**: clearly visible large patches of exposed soil with no visible crop growth."
+        )
+
+    if "animal" in look_for.lower():
+        tools.append(
+            {
+                "type": "function",
+                "function": {
+                    "name": "report_animal",
+                    "description": "Function to report detected animals in the field",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "species": {"type": "string"},
+                            "description": {"type": "string"},
+                            "confidence": {"type": "number"},
+                            "box_parameter": {"type": "array", "items": {"type": "integer"}},
+                        },
+                        "required": ["species", "description", "confidence", "box_parameter"],
+                    },
+                },
+            }
+        )
+        prompt_parts.append(
+            "- **Animals**: clearly visible animals like deer, birds, or rabbits."
+        )
+
+    prompt_parts.append(
+        "Return results using the appropriate function and include bounding box [x1, y1, x2, y2] using 1920x1080 coordinates."
+    )
+    prompt_text = "\n".join(prompt_parts)
+
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
             {
                 "role": "user",
                 "content": [
-                    {
-                        "type": "text",
-                        "text": (
-                            "Analyze this frame of the field and identify any bare spots. "
-                            "A bare spot is defined as a **large, clearly visible patch of exposed soil** "
-                            "with **no visible crop growth**, not just a small gap between plants. "
-                            "These areas often appear as dark, compacted zones, paths, or spots, "
-                            "possibly caused by machinery, drought, or compaction. "
-                            "**Only call the `report_bare_spot` function if the bare soil area "
-                            "is large and clearly distinct from healthy crop rows.** "
-                            "Describe the bare spot in 1 sentence (e.g. are there cracks in the soil, "
-                            "is there a water deficit). "
-                            "Return the box coordinates of the spot as [x1, y1, x2, y2] for a 1920x1080 image."
-                        ),
-                    },
+                    {"type": "text", "text": prompt_text},
                     {
                         "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{base64_image}",
-                            "detail": "high",
-                        },
+                        "image_url": {"url": f"data:image/jpeg;base64,{base64_image}", "detail": "high"},
                     },
                 ],
             }
         ],
-        tools=[
-            {
-                "type": "function",
-                "function": {
-                    "name": "report_bare_spot",
-                    "description": "Funktion to report found bare spots",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "report": {
-                                "type": "string",
-                                "description": "Describe the bare spot in 1 Sentence e.g are there cracks in the soil, is there a water deficit",
-                            },
-                            "confidence": {
-                                "type": "number",
-                                "description": "Confidence level from 0 to 1",
-                            },
-                            "box_parameter": {
-                                "type": "array",
-                                "items": {"type": "integer"},
-                                "description": "Bounding box [x1, y1, x2, y2] using 1920x1080 image coordinates",
-                            },
-                        },
-                        "required": ["report", "confidence", "box_parameter"],
-                    },
-                },
-            }
-        ],
+        tools=tools,
         tool_choice="auto",
-        max_tokens=100,
+        max_tokens=200,
     )
 
-    # The model may decide to call ``report_bare_spot`` with its findings
+    results = []
     tool_calls = response.choices[0].message.tool_calls
     if tool_calls:
-        # Iterate over any function calls returned by the model
         for tool_call in tool_calls:
-            if tool_call.function.name == "report_bare_spot":
-                args = json.loads(tool_call.function.arguments)
-                # Only accept detections with reasonably high confidence
-                if args.get("confidence", 0) >= 0.85:
-                    report = report_bare_spot(
-                        args["report"],
-                        args["confidence"],
-                        str(args.get("box_parameter")),
-                    )
-                    return {
-                        # Information stored back into the DataFrame
+            args = json.loads(tool_call.function.arguments)
+            if tool_call.function.name == "report_bare_spot" and args.get("confidence", 0) >= 0.85:
+                results.append(
+                    {
                         "object_type": "bare spot",
                         "report": args["report"],
                         "confidence": args["confidence"],
-                        "description": report,
+                        "box_parameter": args.get("box_parameter"),
+                        "description": report_bare_spot(
+                            args["report"], args["confidence"], str(args.get("box_parameter"))
+                        ),
+                    }
+                )
+            elif tool_call.function.name == "report_animal" and args.get("confidence", 0) >= 0.85:
+                results.append(
+                    {
+                        "object_type": "animal",
+                        "species": args["species"],
+                        "description": args["description"],
+                        "confidence": args["confidence"],
                         "box_parameter": args.get("box_parameter"),
                     }
-    return None
+                )
+
+    return results if results else None
 
 
 if __name__ == "__main__":

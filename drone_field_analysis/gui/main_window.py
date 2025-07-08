@@ -80,6 +80,15 @@ class DroneFieldGUI(tk.Tk):
         tk.Button(self, text="Browse", command=self.browse_srt).grid(
             row=2, column=2, padx=5, pady=5
         )
+
+        tk.Label(self, text="Look For:").grid(
+            row=3, column=0, sticky="e", padx=5, pady=5
+        )
+        self.look_for_var = tk.StringVar(value="Bare spots")
+        options = ["Bare spots", "Animals", "Both"]
+        tk.OptionMenu(self, self.look_for_var, *options).grid(
+            row=3, column=1, columnspan=2, sticky="w", padx=5, pady=5
+        )
         tk.Button(self, text="Scan", command=self.scan).grid(
             row=4, column=0, columnspan=3, pady=10
         )
@@ -169,8 +178,10 @@ class DroneFieldGUI(tk.Tk):
         img_label = tk.Label(top, image=img_photo)
         img_label.image = img_photo  # keep reference
         img_label.pack()
-
+        
         info_lines = [f"Lat: {lat}", f"Lon: {lon}"]
+        info_lines = []
+
         if gps_text:
             info_lines.append(f"GPS: {gps_text}")
         info_lines.append(f"Report: {report}")
@@ -305,34 +316,32 @@ class DroneFieldGUI(tk.Tk):
         output_dir = OUTPUT_DIR
         try:
             self.data = extract_frames_with_gps(mp4, srt, output_dir)
+            look_for = self.look_for_var.get()
             for idx, row in self.data.iterrows():
-                result = analyze_frame(row["image_path"])
-                if result:
-                    self.data.at[idx, "object_type"] = result["object_type"]
-                    self.data.at[idx, "report"] = result["report"]
-                    self.data.at[idx, "description"] = result["description"]
-                    self.data.at[idx, "confidence"] = result["confidence"]
-                    self.data.at[idx, "box_parameter"] = result.get("box_parameter")
-                    boxed_path = row["image_path"]
-                    if result.get("box_parameter"):
-                        try:
-                            img = Image.open(row["image_path"])
-                            draw = ImageDraw.Draw(img)
-                            # Outline the detected region on the image
-                            draw.rectangle(
-                                tuple(result["box_parameter"]), outline="blue", width=5
-                            )
-                            # Save boxed image next to the original frame
-                            boxed_path = (
-                                row["image_path"].rsplit(".", 1)[0] + "_boxed.jpg"
-                            )
-                            img.save(boxed_path)
-                        except Exception as e:
-                            logger.error("Failed to draw box on %s: %s", row["image_path"], e)
-                            boxed_path = row["image_path"]
-                    self.data.at[idx, "boxed_image_path"] = boxed_path
-                    # Insert the detection into the on-screen results list
-                    self.add_finding(self.data.loc[idx])
+                results = analyze_frame(row["image_path"], look_for)
+                if not results:
+                    continue
+                result = results[0]
+                self.data.at[idx, "object_type"] = result.get("object_type")
+                self.data.at[idx, "report"] = result.get("report") or result.get("species")
+                self.data.at[idx, "description"] = result.get("description")
+                self.data.at[idx, "confidence"] = result.get("confidence")
+                self.data.at[idx, "box_parameter"] = result.get("box_parameter")
+                boxed_path = row["image_path"]
+                if result.get("box_parameter"):
+                    try:
+                        img = Image.open(row["image_path"])
+                        draw = ImageDraw.Draw(img)
+                        draw.rectangle(
+                            tuple(result["box_parameter"]), outline="blue", width=5
+                        )
+                        boxed_path = row["image_path"].rsplit(".", 1)[0] + "_boxed.jpg"
+                        img.save(boxed_path)
+                    except Exception as e:
+                        logger.error("Failed to draw box on %s: %s", row["image_path"], e)
+                        boxed_path = row["image_path"]
+                self.data.at[idx, "boxed_image_path"] = boxed_path
+                self.add_finding(self.data.loc[idx])
             messagebox.showinfo("Scan Complete", f"Frames saved to '{output_dir}'")
             if self.show_map_button:
                 # Enable map button once processing is finished
