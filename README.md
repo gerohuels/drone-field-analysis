@@ -10,13 +10,13 @@ The GUI presents a scrollable list of all findings. Clicking a thumbnail opens t
 ## Input files
 Place your `.mp4` video and matching `.srt` file into the `footage/` folder before running the analysis.
 
-## AI bare spot detection
+## AI bare spot and animal detection
 
 The `drone_field_analysis/utils/data_processing.py` module demonstrates how to analyze the extracted frames using
-the OpenAI API. A frame is sent to the `gpt-4o` model with instructions to look
-for large, clearly visible bare soil patches. If the model detects such a bare
-spot with high confidence it triggers the `report_bare_spot` function, printing
-the estimated location and confidence score.
+the OpenAI API. Each frame is sent to the `gpt-4o` model with instructions to look
+for large, clearly visible bare soil patches or animals. If the model detects a
+matching object with high confidence it triggers the appropriate reporting function,
+printing the estimated location and confidence score.
 
 Set the `OPENAI_API_KEY` environment variable before running this script.
 
@@ -50,7 +50,7 @@ python main.py
 
 ### Dependencies
 
-- [OpenAI Python](https://github.com/openai/openai-python) - Access to the GPT models for bare spot detection.
+- [OpenAI Python](https://github.com/openai/openai-python) - Access to the GPT models for bare spot and animal detection.
 - [OpenCV](https://opencv.org/) - Extracts frames from the drone footage.
 - [pysrt](https://github.com/byroot/pysrt) - Parses subtitle files containing GPS coordinates.
 - [Pillow](https://python-pillow.org/) - Image loading and thumbnail generation.
