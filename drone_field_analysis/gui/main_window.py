@@ -122,13 +122,6 @@ class DroneFieldGUI(tk.Tk):
             variable=self.show_path_var,
         ).grid(row=8, column=0, columnspan=3)
 
-        self.show_gps_var = tk.BooleanVar(value=True)
-        tk.Checkbutton(
-            self,
-            text="Show Raw GPS Data",
-            variable=self.show_gps_var,
-        ).grid(row=9, column=0, columnspan=3)
-
     def browse_mp4(self):
         """Prompt the user to select an MP4 file."""
         path = filedialog.askopenfilename(filetypes=[("MP4 files", "*.mp4")])
@@ -164,8 +157,7 @@ class DroneFieldGUI(tk.Tk):
         lat, lon:
             GPS coordinates associated with the frame.
         gps_text:
-            Raw GPS text from the subtitle track. Display of this value can be
-            toggled using the *Show Raw GPS Data* option in the main window.
+            Raw GPS text from the subtitle track.
         """
         top = tk.Toplevel(self)
         top.title("Image Viewer")
@@ -179,7 +171,7 @@ class DroneFieldGUI(tk.Tk):
         img_label.pack()
 
         info_lines = [f"Lat: {lat}", f"Lon: {lon}"]
-        if self.show_gps_var.get() and gps_text:
+        if gps_text:
             info_lines.append(f"GPS: {gps_text}")
         info_lines.append(f"Report: {report}")
         info_lines.append(f"Confidence: {confidence:.2f}")
