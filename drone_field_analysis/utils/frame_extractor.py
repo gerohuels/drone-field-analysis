@@ -32,9 +32,11 @@ def extract_gps_data_from_srt(srt_path):
     dict
         Mapping of second (int) -> GPS text (str).
     """
+    # ``pysrt`` parses the subtitle file and gives us start/stop times
     subs = pysrt.open(srt_path)
     gps_data = {}
     for sub in subs:
+        # Subtitle timings are provided in milliseconds, convert to seconds
         start_sec = int(sub.start.ordinal / 1000)
         gps_data[start_sec] = sub.text.strip()
     return gps_data
@@ -49,6 +51,7 @@ def parse_coordinates(gps_text: str):
     """
     # Search the text for floating point numbers that look like
     # latitude and longitude values.
+    # The regex captures signed floating point numbers like -12.345
     numbers = re.findall(r"-?\d+\.\d+", gps_text)
     if len(numbers) >= 2:
         return float(numbers[0]), float(numbers[1])
@@ -85,12 +88,13 @@ def extract_frames_with_gps(
     # Total duration in seconds (integer division avoids partial seconds)
     duration = frame_count // fps
 
+    # Accumulated metadata for each extracted frame
     rows = []
 
     # Iterate through the video one second at a time and save each frame
     # together with the corresponding GPS information from the subtitle file.
     for sec in range(duration):
-        # Jump to the correct timestamp and grab a frame
+        # Jump to the current second in the video and grab a single frame
         vidcap.set(cv2.CAP_PROP_POS_MSEC, sec * 1000)
         success, frame = vidcap.read()
         if success and sec in gps_data:
@@ -121,7 +125,8 @@ def extract_frames_with_gps(
     # Release the video capture handle when done
     vidcap.release()
 
-    # Build a DataFrame so downstream steps can easily access frame metadata
+    # Convert the collected ``rows`` list into a DataFrame so downstream
+    # processing can easily access frame metadata
     df = pd.DataFrame(
         rows,
         columns=[

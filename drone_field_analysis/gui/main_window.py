@@ -126,6 +126,7 @@ class DroneFieldGUI(tk.Tk):
         )
         self.show_map_button.grid(row=7, column=0, columnspan=3, pady=10)
 
+        # Toggle whether the flight path polyline is drawn on the map
         self.show_path_var = tk.BooleanVar(value=True)
         tk.Checkbutton(
             self,
@@ -181,7 +182,9 @@ class DroneFieldGUI(tk.Tk):
         img_label.image = img_photo  # keep reference
         img_label.pack()
         
+        # Build a short description of the detection
         info_lines = [f"Lat: {lat}", f"Lon: {lon}"]
+        # ``gps_text`` may contain a richer GPS string from the subtitle track
         info_lines = []
 
         if gps_text:
@@ -206,7 +209,7 @@ class DroneFieldGUI(tk.Tk):
             photo = cast(tk.PhotoImage, ImageTk.PhotoImage(thumb_img))
         self.result_images.append(photo)
 
-        #Klick on full thumbnail for full-image
+        # Clicking the thumbnail opens a larger image preview
         frame = tk.Frame(self.results_container, bd=1, relief="solid", padx=5, pady=5)
         img_label = tk.Label(frame, image=photo, cursor="hand2")
         img_label.pack(side="left")
@@ -221,6 +224,7 @@ class DroneFieldGUI(tk.Tk):
             side="left", padx=5
         )
 
+        # Insert the newest result at the top of the list
         packed_children = self.results_container.pack_slaves()
         if packed_children:
             frame.pack(fill="x", padx=5, pady=5, before=packed_children[0])
@@ -230,6 +234,7 @@ class DroneFieldGUI(tk.Tk):
     def show_map(self):
         """Open a browser map visualizing all detections."""
 
+        # Only keep rows where an object was detected
         found_df = self.data.dropna(subset=["object_type"])
         if found_df.empty:
             messagebox.showinfo("No Findings", "No findings to display on the map.")
@@ -244,6 +249,7 @@ class DroneFieldGUI(tk.Tk):
 
         mymap = folium.Map(location=map_center, zoom_start=15)
 
+        # Place a marker for each detection
         for _, entry in found_df.iterrows():
             image_path = entry.get("boxed_image_path") or entry["image_path"]
             image_file = os.path.basename(image_path)
@@ -287,6 +293,7 @@ class DroneFieldGUI(tk.Tk):
     def add_flight_path(self, mymap):
         """Add a polyline showing the drone's path to ``mymap`` if enabled."""
         if not self.data.empty and self.show_path_var.get():
+            # Gather all valid latitude/longitude pairs in chronological order
             path_points = []
             for _, info in self.data.sort_values("frame").iterrows():
                 lat = info.get("latitude")
@@ -294,6 +301,7 @@ class DroneFieldGUI(tk.Tk):
                 if pd.notna(lat) and pd.notna(lon):
                     path_points.append((lat, lon))
             if len(path_points) >= 2:
+                # Draw the drone's trajectory on the map
                 folium.PolyLine(
                     path_points,
                     color="blue",
@@ -317,18 +325,22 @@ class DroneFieldGUI(tk.Tk):
 
         output_dir = OUTPUT_DIR
         try:
+            # Step 1: extract frames from the video and collect GPS metadata
             self.data = extract_frames_with_gps(mp4, srt, output_dir)
             look_for = self.look_for_var.get()
             for idx, row in self.data.iterrows():
+                # Run AI analysis on each extracted frame
                 results = analyze_frame(row["image_path"], look_for)
                 if not results:
                     continue
                 result = results[0]
+                # Store analysis results back into the main DataFrame
                 self.data.at[idx, "object_type"] = result.get("object_type")
                 self.data.at[idx, "report"] = result.get("report") or result.get("species")
                 self.data.at[idx, "description"] = result.get("description")
                 self.data.at[idx, "confidence"] = result.get("confidence")
                 self.data.at[idx, "box_parameter"] = result.get("box_parameter")
+                # Path to an image with the bounding box drawn (defaults to the original)
                 boxed_path = row["image_path"]
                 # Draw the bounding box returned by the detection model.
                 # Coordinates are sometimes off, so the box may not perfectly
