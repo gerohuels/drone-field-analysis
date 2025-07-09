@@ -22,7 +22,8 @@ def encode_image(image_path: str) -> str:
     """Return a base64 encoded string for the given image.
 
     The OpenAI API expects image content to be provided as a base64 string,
-    so this helper reads the file and performs the conversion.
+    so this helper reads the file and performs the conversion before
+    returning it to the caller.
     """
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode("utf-8")
@@ -75,10 +76,14 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
     """
     base64_image = encode_image(image_path)
 
-    tools = []
-    prompt_parts = ["Analyze this frame and identify any of the following objects:"]
+    tools = []  # functions exposed to the language model for structured output
+    prompt_parts = [
+        "Analyze this frame and identify any of the following objects:"
+    ]  # Text instructions passed to the model
 
     if "bare spot" in look_for.lower():
+        # Allow the model to call ``report_bare_spot`` when a patch of bare soil
+        # is detected in the frame
         tools.append(
             {
                 "type": "function",
@@ -102,6 +107,7 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
         )
 
     if "animal" in look_for.lower():
+        # Similarly expose ``report_animal`` for animal sightings
         tools.append(
             {
                 "type": "function",
@@ -128,6 +134,8 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
     prompt_parts.append(
         "Return results using the appropriate function and include bounding box [x1, y1, x2, y2] using 1920x1080 coordinates."
     )
+
+    # Combine the individual prompt segments into the final instruction text
     prompt_text = "\n".join(prompt_parts)
 
     # Send the prepared prompt and image to the OpenAI API. The API
@@ -152,11 +160,13 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
         max_tokens=200,
     )
 
+    # Collect structured information returned via the selected tool calls
     results = []
     tool_calls = response.choices[0].message.tool_calls
     if tool_calls:
         for tool_call in tool_calls:
             args = json.loads(tool_call.function.arguments)
+            # Only accept detections with reasonably high confidence
             if tool_call.function.name == "report_bare_spot" and args.get("confidence", 0) >= 0.85:
                 results.append(
                     {
@@ -170,6 +180,7 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
                     }
                 )
             elif tool_call.function.name == "report_animal" and args.get("confidence", 0) >= 0.85:
+                # Append details when an animal has been confidently detected
                 results.append(
                     {
                         "object_type": "animal",
@@ -180,6 +191,7 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
                     }
                 )
 
+    # ``None`` signals that the model did not detect anything of interest
     return results if results else None
 
 
