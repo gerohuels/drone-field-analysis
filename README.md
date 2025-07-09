@@ -61,5 +61,9 @@ python main.py
 
 - Bounding boxes drawn around detected objects are sometimes imprecise.
 
+## Potential Next Features
+
+- Detecting weeds
+
 ### Acknowledgments
 This project uses the Pandas library, © The Pandas Development Team, licensed under the BSD 3-Clause License.
