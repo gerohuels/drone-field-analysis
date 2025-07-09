@@ -1,5 +1,5 @@
 # drone-field-analysis
-An application for analyzing drone footage to **find bare spots or animals** in a field and assess overall crop health. Detected areas are visualized on an interactive field map.
+A Python application for analyzing agricultural drone footage to locate bare spots and animals in fields. Detected areas are visualized on an interactive map.
 
 ![1](https://github.com/user-attachments/assets/3411ca3e-d507-4cae-9685-a223fbc913ef)
 ![2](https://github.com/user-attachments/assets/b7257ed3-f23f-4f6c-b358-dbb9129e6eb5)
