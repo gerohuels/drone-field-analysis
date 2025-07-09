@@ -1,6 +1,11 @@
 # drone-field-analysis
 An application for analyzing drone footage to **find bare spots or animals** in a field and assess overall crop health. Detected areas are visualized on an interactive field map.
 
+![1](https://github.com/user-attachments/assets/3411ca3e-d507-4cae-9685-a223fbc913ef)
+![2](https://github.com/user-attachments/assets/b7257ed3-f23f-4f6c-b358-dbb9129e6eb5)
+![3](https://github.com/user-attachments/assets/10dbed14-80cc-4109-a7cd-b34165f31edb)
+
+
 The application processes `.mp4` video footage of the field along with a corresponding `.srt` file that contains GPS location data from the drone.
 It can identify bare soil patches or animals in the field, saving frames where such areas are found along with their GPS coordinates.
 All detections are visualized on a field map for easy monitoring and analysis. Each marker opens a popup containing a preview image for quick review.
