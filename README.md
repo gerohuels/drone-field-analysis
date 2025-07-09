@@ -3,9 +3,9 @@
 
 A Python application for analyzing agricultural drone footage to locate bare spots and animals in fields. Detected areas are visualized on an interactive map.
 
-**Main menu screenshot**
+**Main menu **
 
-![Main menu screenshot](https://github.com/user-attachments/assets/3411ca3e-d507-4cae-9685-a223fbc913ef)
+![Main menu](https://github.com/user-attachments/assets/3411ca3e-d507-4cae-9685-a223fbc913ef)
 
 
 
