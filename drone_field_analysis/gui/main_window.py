@@ -263,10 +263,12 @@ class DroneFieldGUI(tk.Tk):
                 img_base64 = ""
 
             # 🖼️ Create HTML content with base64 image embedded
+            title = entry.get("object_type", "")
             report_text = entry.get("report", "")
             image_html = f"""
                 <div>
-                    <strong>{report_text}</strong><br>
+                    <strong>{title}</strong><br>
+                    {report_text}<br>
                     <img src="data:image/jpeg;base64,{img_base64}" width="200">
                 </div>
             """
