@@ -94,8 +94,6 @@ class DroneFieldGUI(tk.Tk):
         tk.Button(self, text="Scan", command=self.scan).grid(
             row=4, column=0, columnspan=3, pady=10
         )
-        tk.Label(self, text="Found Elements").grid(row=5, column=0, columnspan=3)
-
         self.results_canvas = tk.Canvas(self, width=400, height=200)
         scrollbar = tk.Scrollbar(
             self, orient="vertical", command=self.results_canvas.yview
@@ -103,9 +101,9 @@ class DroneFieldGUI(tk.Tk):
         self.results_canvas.configure(yscrollcommand=scrollbar.set)
 
         self.results_canvas.grid(
-            row=6, column=0, columnspan=3, padx=10, pady=5, sticky="nsew"
+            row=5, column=0, columnspan=3, padx=10, pady=5, sticky="nsew"
         )
-        scrollbar.grid(row=6, column=3, sticky="ns")
+        scrollbar.grid(row=5, column=3, sticky="ns")
 
         self.results_container = tk.Frame(self.results_canvas)
         self.results_canvas.create_window(
@@ -124,7 +122,7 @@ class DroneFieldGUI(tk.Tk):
             command=self.show_map,
             state="disabled",
         )
-        self.show_map_button.grid(row=7, column=0, columnspan=3, pady=10)
+        self.show_map_button.grid(row=6, column=0, columnspan=3, pady=10)
 
         # Toggle whether the flight path polyline is drawn on the map
         self.show_path_var = tk.BooleanVar(value=True)
@@ -132,7 +130,7 @@ class DroneFieldGUI(tk.Tk):
             self,
             text="Show Flight Path",
             variable=self.show_path_var,
-        ).grid(row=8, column=0, columnspan=3)
+        ).grid(row=7, column=0, columnspan=3)
 
     def browse_mp4(self):
         """Prompt the user to select an MP4 file."""
