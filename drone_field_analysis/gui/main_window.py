@@ -85,9 +85,9 @@ class DroneFieldGUI(tk.Tk):
             row=3, column=0, sticky="e", padx=5, pady=5
         )
         # The option menu allows users to specify what objects should be
-        # detected in each frame. Choices are bare spots, animals or both.
+        # detected in each frame.
         self.look_for_var = tk.StringVar(value="Bare spots")
-        options = ["Bare spots", "Animals", "Both"]
+        options = ["Bare spots", "Animals", "Weeds", "All"]
         tk.OptionMenu(self, self.look_for_var, *options).grid(
             row=3, column=1, columnspan=2, sticky="w", padx=5, pady=5
         )
@@ -336,7 +336,11 @@ class DroneFieldGUI(tk.Tk):
                 result = results[0]
                 # Store analysis results back into the main DataFrame
                 self.data.at[idx, "object_type"] = result.get("object_type")
-                self.data.at[idx, "report"] = result.get("report") or result.get("species")
+                self.data.at[idx, "report"] = (
+                    result.get("report")
+                    or result.get("species")
+                    or result.get("weed_type")
+                )
                 self.data.at[idx, "description"] = result.get("description")
                 self.data.at[idx, "confidence"] = result.get("confidence")
                 self.data.at[idx, "box_parameter"] = result.get("box_parameter")
