@@ -3,7 +3,7 @@
 import logging
 import tkinter as tk
 
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, ttk
 from typing import cast
 import os
 import webbrowser
@@ -53,6 +53,9 @@ class DroneFieldGUI(tk.Tk):
         self.results_canvas = None
         self.results_container = None
         self.show_map_button = None
+        self.progress_var = tk.DoubleVar(value=0)
+        self.progress_bar = None
+        self.progress_label = None
         self.create_widgets()
 
     def create_widgets(self):
@@ -131,6 +134,16 @@ class DroneFieldGUI(tk.Tk):
             text="Show Flight Path",
             variable=self.show_path_var,
         ).grid(row=7, column=0, columnspan=3)
+
+        # Progress bar for frame processing
+        self.progress_bar = ttk.Progressbar(
+            self, variable=self.progress_var, maximum=100
+        )
+        self.progress_bar.grid(row=8, column=0, columnspan=3, padx=10, pady=5, sticky="ew")
+        self.progress_bar.grid_remove()
+        self.progress_label = tk.Label(self, text="")
+        self.progress_label.grid(row=9, column=0, columnspan=3)
+        self.progress_label.grid_remove()
 
     def browse_mp4(self):
         """Prompt the user to select an MP4 file."""
@@ -328,6 +341,15 @@ class DroneFieldGUI(tk.Tk):
             # Step 1: extract frames from the video and collect GPS metadata
             self.data = extract_frames_with_gps(mp4, srt, output_dir)
             look_for = self.look_for_var.get()
+
+            frame_count = len(self.data)
+            if frame_count:
+                self.progress_bar.configure(maximum=frame_count)
+                self.progress_var.set(0)
+                self.progress_label.config(text=f"0 / {frame_count} frames")
+                self.progress_bar.grid()
+                self.progress_label.grid()
+
             for idx, row in self.data.iterrows():
                 # Run AI analysis on each extracted frame
                 results = analyze_frame(row["image_path"], look_for)
@@ -359,6 +381,14 @@ class DroneFieldGUI(tk.Tk):
                         boxed_path = row["image_path"]
                 self.data.at[idx, "boxed_image_path"] = boxed_path
                 self.add_finding(self.data.loc[idx])
+                if frame_count:
+                    self.progress_var.set(idx + 1)
+                    self.progress_label.config(text=f"{idx + 1} / {frame_count} frames")
+                    self.update_idletasks()
+
+            if frame_count:
+                self.progress_bar.grid_remove()
+                self.progress_label.grid_remove()
             messagebox.showinfo("Scan Complete", f"Frames saved to '{output_dir}'")
             if self.show_map_button:
                 # Enable map button once processing is finished
