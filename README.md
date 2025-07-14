@@ -30,6 +30,10 @@ The GUI presents a scrollable list of all findings. Clicking a thumbnail opens t
 ## Input files
 Place your `.mp4` video and matching `.srt` file into the `footage/` folder before running the analysis.
 
+To search for a specific object, edit `drone_field_analysis/config/search_target.txt`
+and enter the item you want the model to look for. Choose **Custom (file)** in
+the *Look For* menu to use this value during scanning.
+
 ## AI bare spot and animal detection
 
 The `drone_field_analysis/utils/data_processing.py` module demonstrates how to analyze the extracted frames using

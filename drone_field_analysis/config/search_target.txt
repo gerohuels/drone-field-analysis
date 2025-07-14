@@ -1,0 +1,2 @@
+# Enter the object you want the analysis to look for.
+bare spot

@@ -16,7 +16,7 @@ import pandas as pd
 
 from ..utils.frame_extractor import extract_frames_with_gps
 from ..utils.data_processing import analyze_frame
-from ..config.settings import OUTPUT_DIR
+from ..config.settings import OUTPUT_DIR, SEARCH_TARGET_FILE
 
 logger = logging.getLogger(__name__)
 
@@ -85,9 +85,10 @@ class DroneFieldGUI(tk.Tk):
             row=3, column=0, sticky="e", padx=5, pady=5
         )
         # The option menu allows users to specify what objects should be
-        # detected in each frame. Choices are bare spots, animals or both.
+        # detected in each frame. A custom target can be provided via
+        # ``SEARCH_TARGET_FILE``.
         self.look_for_var = tk.StringVar(value="Bare spots")
-        options = ["Bare spots", "Animals", "Both"]
+        options = ["Bare spots", "Animals", "Both", "Custom (file)"]
         tk.OptionMenu(self, self.look_for_var, *options).grid(
             row=3, column=1, columnspan=2, sticky="w", padx=5, pady=5
         )
@@ -328,6 +329,23 @@ class DroneFieldGUI(tk.Tk):
             # Step 1: extract frames from the video and collect GPS metadata
             self.data = extract_frames_with_gps(mp4, srt, output_dir)
             look_for = self.look_for_var.get()
+            if look_for == "Custom (file)":
+                try:
+                    with open(SEARCH_TARGET_FILE, "r", encoding="utf-8") as f:
+                        look_for = f.read().strip()
+                    if not look_for:
+                        raise ValueError("Empty search file")
+                except FileNotFoundError:
+                    messagebox.showerror(
+                        "Missing File",
+                        f"Custom search file not found: {SEARCH_TARGET_FILE}",
+                    )
+                    return
+                except ValueError:
+                    messagebox.showerror(
+                        "Empty File", "Please specify an object in the custom search file.",
+                    )
+                    return
             for idx, row in self.data.iterrows():
                 # Run AI analysis on each extracted frame
                 results = analyze_frame(row["image_path"], look_for)

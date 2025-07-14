@@ -11,7 +11,7 @@ import logging
 import os
 from openai import OpenAI
 
-from ..config.settings import OUTPUT_DIR
+from ..config.settings import OUTPUT_DIR, SEARCH_TARGET_FILE
 
 
 logger = logging.getLogger(__name__)
@@ -27,6 +27,20 @@ def encode_image(image_path: str) -> str:
     """
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode("utf-8")
+
+
+def read_search_target() -> str | None:
+    """Return the custom object to search for from ``SEARCH_TARGET_FILE``.
+
+    An empty or missing file results in ``None`` being returned so callers can
+    fall back to a default value.
+    """
+    try:
+        with open(SEARCH_TARGET_FILE, "r", encoding="utf-8") as file:
+            target = file.read().strip()
+            return target or None
+    except FileNotFoundError:
+        return None
 
 
 def report_bare_spot(report: str, confidence: float, box_parameter: str) -> str:
@@ -59,6 +73,21 @@ def report_animal(
     return message
 
 
+def report_custom_object(
+    object_name: str, description: str, confidence: float, box_parameter: str
+) -> str:
+    """Return a short description of a detected custom object."""
+
+    message = (
+        f"Object: {object_name} \n"
+        f"Description: {description} \n"
+        f"Detection confidence is {confidence:.2f}. \n"
+        f"Box coordinates: {box_parameter}."
+    )
+    logger.info("🔍 %s", message)
+    return message
+
+
 def analyze_frame(image_path: str, look_for: str = "bare spot"):
     """Analyze a frame using the OpenAI API.
 
@@ -74,6 +103,11 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
         contains ``object_type``, ``description``, ``confidence`` and
         ``box_parameter`` keys. ``None`` is returned when nothing is found.
     """
+    # Allow the user to override ``look_for`` via ``SEARCH_TARGET_FILE``.
+    custom_target = read_search_target()
+    if custom_target:
+        look_for = custom_target
+
     base64_image = encode_image(image_path)
 
     tools = []  # functions exposed to the language model for structured output
@@ -131,6 +165,29 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
             "- **Animals**: clearly visible animals like deer, birds, or rabbits."
         )
 
+    if not tools:
+        # Generic case when the user requests a custom object
+        tools.append(
+            {
+                "type": "function",
+                "function": {
+                    "name": "report_custom_object",
+                    "description": "Function to report a user defined object",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "object_name": {"type": "string"},
+                            "description": {"type": "string"},
+                            "confidence": {"type": "number"},
+                            "box_parameter": {"type": "array", "items": {"type": "integer"}},
+                        },
+                        "required": ["object_name", "description", "confidence", "box_parameter"],
+                    },
+                },
+            }
+        )
+        prompt_parts.append(f"- **{look_for}**: clearly visible {look_for} in the frame.")
+
     prompt_parts.append(
         "Return results using the appropriate function and include bounding box [x1, y1, x2, y2] using 1920x1080 coordinates."
     )
@@ -185,6 +242,15 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
                     {
                         "object_type": "animal",
                         "species": args["species"],
+                        "description": args["description"],
+                        "confidence": args["confidence"],
+                        "box_parameter": args.get("box_parameter"),
+                    }
+                )
+            elif tool_call.function.name == "report_custom_object" and args.get("confidence", 0) >= 0.85:
+                results.append(
+                    {
+                        "object_type": args["object_name"],
                         "description": args["description"],
                         "confidence": args["confidence"],
                         "box_parameter": args.get("box_parameter"),
