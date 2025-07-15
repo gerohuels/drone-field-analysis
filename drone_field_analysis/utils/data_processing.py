@@ -59,6 +59,17 @@ def report_animal(
     return message
 
 
+def report_weeds(description: str, confidence: float, box_parameter: str) -> str:
+    """Return a short description of detected weeds."""
+    message = (
+        f"Description: {description} \n"
+        f"Detection confidence is {confidence:.2f}. \n"
+        f"Box coordinates: {box_parameter}."
+    )
+    logger.info("\N{herb} %s", message)
+    return message
+
+
 def analyze_frame(image_path: str, look_for: str = "bare spot"):
     """Analyze a frame using the OpenAI API.
 
@@ -73,6 +84,7 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
         List with dictionaries describing any detected objects. Each dictionary
         contains ``object_type``, ``description``, ``confidence`` and
         ``box_parameter`` keys. ``None`` is returned when nothing is found.
+        ``look_for`` may include "weed", "animal" or "bare spot".
     """
     base64_image = encode_image(image_path)
 
@@ -131,6 +143,27 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
             "- **Animals**: clearly visible animals like deer, birds, or rabbits."
         )
 
+    if "weed" in look_for.lower():
+        tools.append(
+            {
+                "type": "function",
+                "function": {
+                    "name": "report_weeds",
+                    "description": "Function to report weeds in the field",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "description": {"type": "string"},
+                            "confidence": {"type": "number"},
+                            "box_parameter": {"type": "array", "items": {"type": "integer"}},
+                        },
+                        "required": ["description", "confidence", "box_parameter"],
+                    },
+                },
+            }
+        )
+        prompt_parts.append("- **Weeds**: clearly visible weed clusters among crops.")
+
     prompt_parts.append(
         "Return results using the appropriate function and include bounding box [x1, y1, x2, y2] using 1920x1080 coordinates."
     )
@@ -185,6 +218,15 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
                     {
                         "object_type": "animal",
                         "species": args["species"],
+                        "description": args["description"],
+                        "confidence": args["confidence"],
+                        "box_parameter": args.get("box_parameter"),
+                    }
+                )
+            elif tool_call.function.name == "report_weeds" and args.get("confidence", 0) >= 0.85:
+                results.append(
+                    {
+                        "object_type": "weed",
                         "description": args["description"],
                         "confidence": args["confidence"],
                         "box_parameter": args.get("box_parameter"),

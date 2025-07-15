@@ -15,7 +15,7 @@ from PIL import Image, ImageTk, ImageDraw
 import pandas as pd
 
 from ..utils.frame_extractor import extract_frames_with_gps
-from ..utils.data_processing import analyze_frame
+from ..agents.orchestrator import OrchestratorAgent
 from ..config.settings import OUTPUT_DIR
 
 logger = logging.getLogger(__name__)
@@ -53,6 +53,7 @@ class DroneFieldGUI(tk.Tk):
         self.results_canvas = None
         self.results_container = None
         self.show_map_button = None
+        self.orchestrator = OrchestratorAgent()
         self.create_widgets()
 
     def create_widgets(self):
@@ -329,8 +330,8 @@ class DroneFieldGUI(tk.Tk):
             self.data = extract_frames_with_gps(mp4, srt, output_dir)
             look_for = self.look_for_var.get()
             for idx, row in self.data.iterrows():
-                # Run AI analysis on each extracted frame
-                results = analyze_frame(row["image_path"], look_for)
+                # Run AI analysis on each extracted frame via the orchestrator
+                results = self.orchestrator.run(row["image_path"], look_for)
                 if not results:
                     continue
                 result = results[0]
