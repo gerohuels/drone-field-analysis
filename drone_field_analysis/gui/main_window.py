@@ -359,7 +359,13 @@ class DroneFieldGUI(tk.Tk):
                         boxed_path = row["image_path"]
                 self.data.at[idx, "boxed_image_path"] = boxed_path
                 self.add_finding(self.data.loc[idx])
-            messagebox.showinfo("Scan Complete", f"Frames saved to '{output_dir}'")
+            # Persist all collected data for later review
+            csv_path = os.path.join(output_dir, "results.csv")
+            self.data.to_csv(csv_path, index=False)
+            messagebox.showinfo(
+                "Scan Complete",
+                f"Frames saved to '{output_dir}'. Results written to '{csv_path}'",
+            )
             if self.show_map_button:
                 # Enable map button once processing is finished
                 self.show_map_button.config(state="normal")

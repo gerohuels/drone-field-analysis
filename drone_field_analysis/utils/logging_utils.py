@@ -6,10 +6,15 @@ both the GUI and command-line scripts to ensure consistent log formatting.
 """
 
 import logging
+import sys
 from typing import Optional
 
 
-def configure_logging(level: int = logging.INFO, log_format: Optional[str] = None) -> None:
+def configure_logging(
+    level: int = logging.INFO,
+    log_format: Optional[str] = None,
+    log_file: str = "log.txt",
+) -> None:
     """Configure basic logging for the application.
 
     Parameters
@@ -25,5 +30,16 @@ def configure_logging(level: int = logging.INFO, log_format: Optional[str] = Non
         log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
     # ``basicConfig`` should only be called once across the application.
-    logging.basicConfig(level=level, format=log_format)
+    white = "\033[97m"
+    reset = "\033[0m"
+
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(
+        logging.Formatter(f"{white}{log_format}{reset}")
+    )
+
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setFormatter(logging.Formatter(log_format))
+
+    logging.basicConfig(level=level, handlers=[stream_handler, file_handler])
 
