@@ -14,7 +14,7 @@ def main() -> None:
     This function merely sets up logging and instantiates the GUI class.
     """
     # Configure the root logger before any other modules create loggers
-    configure_logging()
+    configure_logging(log_file="log.txt")
 
     # Instantiate the window and start Tkinter's event loop which blocks
     # until the user exits the program
