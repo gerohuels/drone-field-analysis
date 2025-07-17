@@ -53,6 +53,8 @@ class DroneFieldGUI(tk.Tk):
         self.results_canvas = None
         self.results_container = None
         self.show_map_button = None
+        self.progress_var = tk.StringVar(value="")
+        self.progress_label = None
         self.create_widgets()
 
     def create_widgets(self):
@@ -131,6 +133,10 @@ class DroneFieldGUI(tk.Tk):
             text="Show Flight Path",
             variable=self.show_path_var,
         ).grid(row=7, column=0, columnspan=3)
+
+        # Label that displays extraction and processing progress
+        self.progress_label = tk.Label(self, textvariable=self.progress_var)
+        self.progress_label.grid(row=8, column=0, columnspan=3, pady=(0, 10))
 
     def browse_mp4(self):
         """Prompt the user to select an MP4 file."""
@@ -327,8 +333,16 @@ class DroneFieldGUI(tk.Tk):
         try:
             # Step 1: extract frames from the video and collect GPS metadata
             self.data = extract_frames_with_gps(mp4, srt, output_dir)
+            total_frames = len(self.data)
+            self.progress_var.set(f"Extracted {total_frames} frames")
+            self.update_idletasks()
+
             look_for = self.look_for_var.get()
             for idx, row in self.data.iterrows():
+                self.progress_var.set(
+                    f"Processing frame {idx + 1}/{total_frames}"
+                )
+                self.update_idletasks()
                 # Run AI analysis on each extracted frame
                 results = analyze_frame(row["image_path"], look_for)
                 if not results:
@@ -359,6 +373,9 @@ class DroneFieldGUI(tk.Tk):
                         boxed_path = row["image_path"]
                 self.data.at[idx, "boxed_image_path"] = boxed_path
                 self.add_finding(self.data.loc[idx])
+
+            self.progress_var.set("Processing complete")
+            self.update_idletasks()
             # Persist all collected data for later review
             csv_path = os.path.join(output_dir, "results.csv")
             self.data.to_csv(csv_path, index=False)
