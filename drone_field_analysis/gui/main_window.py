@@ -135,7 +135,11 @@ class DroneFieldGUI(tk.Tk):
         ).grid(row=7, column=0, columnspan=3)
 
         # Label that displays extraction and processing progress
-        self.progress_label = tk.Label(self, textvariable=self.progress_var)
+        # Use a distinct foreground color so the text remains visible even on
+        # dark themes.
+        self.progress_label = tk.Label(
+            self, textvariable=self.progress_var, fg="blue"
+        )
         self.progress_label.grid(row=8, column=0, columnspan=3, pady=(0, 10))
 
     def browse_mp4(self):
