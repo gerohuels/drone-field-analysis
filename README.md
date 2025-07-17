@@ -30,12 +30,12 @@ The GUI presents a scrollable list of all findings. Clicking a thumbnail opens t
 ## Input files
 Place your `.mp4` video and matching `.srt` file into the `footage/` folder before running the analysis.
 
-## AI bare spot and animal detection
+## AI bare spot, weed and animal detection
 
 The `drone_field_analysis/utils/data_processing.py` module demonstrates how to analyze the extracted frames using
 the OpenAI API. Each frame is sent to the `gpt-4o` model with instructions to look
-for large, clearly visible bare soil patches or animals. If the model detects a
-matching object with high confidence it triggers the appropriate reporting function,
+for weeds, bare soil patches or animals. An orchestrator agent decides which specialized agent
+should handle the request. When a matching object is detected with high confidence it triggers the appropriate reporting function,
 printing the estimated location and confidence score.
 
 Set the `OPENAI_API_KEY` environment variable before running this script.
@@ -83,7 +83,7 @@ python main.py
 
 ## Potential Next Features
 
-- Detecting weeds
+- Detecting weeds *(implemented via an agent orchestrator)*
 
 ### Acknowledgments
 This project uses the Pandas library, © The Pandas Development Team, licensed under the BSD 3-Clause License.
