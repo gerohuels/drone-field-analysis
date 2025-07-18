@@ -66,8 +66,7 @@ python main.py
 - Optionally draws a bounding box around each detection on the saved frame.
 - Scrollable interface with thumbnails and descriptions of all findings.
 - Interactive map showing detections and the drone's flight path.
-- Drop-down menu lets you search for **Bare spots**, **Animals** or **Both**.
-
+  
 ### Dependencies
 
 - [OpenAI Python](https://github.com/openai/openai-python) - Access to the GPT models for bare spot and animal detection.
