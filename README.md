@@ -53,7 +53,7 @@ python main.py
 1. Launch the program with the command above. The main window opens.
 2. Click **Browse** beside *MP4 File* and select your drone video.
 3. Click **Browse** beside *SRT File* and choose the matching subtitle file containing GPS data.
-4. Choose whether to search for *Bare spots*, *Animals* or *Both* and press **Scan** to analyze each extracted frame.
+4. Choose whether to search for *Bare spots*, *Both* or *Animals* and press **Scan** to analyze each extracted frame.
 5. Detected spots appear in the results list as image thumbnails.
 6. Click any thumbnail to view the full image with its GPS coordinates. The subtitle's raw GPS
    information is displayed automatically when available.
