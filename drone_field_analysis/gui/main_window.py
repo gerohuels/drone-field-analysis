@@ -139,7 +139,7 @@ class DroneFieldGUI(tk.Tk):
         # Use a distinct foreground color so the text remains visible even on
         # dark themes.
         self.progress_label = tk.Label(
-            self, textvariable=self.progress_var, fg="blue"
+            self, textvariable=self.progress_var, fg="white"
         )
         self.progress_label.grid(row=8, column=0, columnspan=3, pady=(0, 10))
 
