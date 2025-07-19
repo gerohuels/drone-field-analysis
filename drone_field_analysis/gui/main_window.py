@@ -1,6 +1,7 @@
 """Tkinter GUI for interacting with the drone field analysis pipeline."""
 
 import logging
+import threading
 import tkinter as tk
 
 from tkinter import filedialog, messagebox
@@ -320,78 +321,89 @@ class DroneFieldGUI(tk.Tk):
                 ).add_to(mymap)
 
     def scan(self):
-        """Run frame extraction and bare spot detection."""
-        mp4 = self.mp4_path.get()
-        srt = self.srt_path.get()
-        if not mp4 or not srt:
-            messagebox.showerror(
-                "Missing Files", "Please select both MP4 and SRT files before scanning."
-            )
-            return
+        """Run frame extraction and bare spot detection in a background thread."""
 
-        if self.show_map_button:
-            # Disable map button until the scan has completed
-            self.show_map_button.config(state="disabled")
-
-        output_dir = OUTPUT_DIR
-        try:
-            # Step 1: extract frames from the video and collect GPS metadata
-            self.data = extract_frames_with_gps(mp4, srt, output_dir)
-            total_frames = len(self.data)
-            self.progress_var.set(f"Extracted {total_frames} frames")
-            self.update_idletasks()
-
-            look_for = self.look_for_var.get()
-            for idx, row in self.data.iterrows():
-                self.progress_var.set(
-                    f"Processing frame {idx + 1}/{total_frames}"
+        def process():
+            mp4 = self.mp4_path.get()
+            srt = self.srt_path.get()
+            if not mp4 or not srt:
+                self.after(
+                    0,
+                    lambda: messagebox.showerror(
+                        "Missing Files",
+                        "Please select both MP4 and SRT files before scanning.",
+                    ),
                 )
-                self.update_idletasks()
-                # Run AI analysis on each extracted frame
-                results = analyze_frame(row["image_path"], look_for)
-                if not results:
-                    continue
-                result = results[0]
-                # Store analysis results back into the main DataFrame
-                self.data.at[idx, "object_type"] = result.get("object_type")
-                self.data.at[idx, "report"] = result.get("report") or result.get("species")
-                self.data.at[idx, "description"] = result.get("description")
-                self.data.at[idx, "confidence"] = result.get("confidence")
-                self.data.at[idx, "box_parameter"] = result.get("box_parameter")
-                # Path to an image with the bounding box drawn (defaults to the original)
-                boxed_path = row["image_path"]
-                # Draw the bounding box returned by the detection model.
-                # Coordinates are sometimes off, so the box may not perfectly
-                # match the object on screen.
-                if result.get("box_parameter"):
-                    try:
-                        img = Image.open(row["image_path"])
-                        draw = ImageDraw.Draw(img)
-                        draw.rectangle(
-                            tuple(result["box_parameter"]), outline="blue", width=5
-                        )
-                        boxed_path = row["image_path"].rsplit(".", 1)[0] + "_boxed.jpg"
-                        img.save(boxed_path)
-                    except Exception as e:
-                        logger.error("Failed to draw box on %s: %s", row["image_path"], e)
-                        boxed_path = row["image_path"]
-                self.data.at[idx, "boxed_image_path"] = boxed_path
-                self.add_finding(self.data.loc[idx])
+                return
 
-            self.progress_var.set("Processing complete")
-            self.update_idletasks()
-            # Persist all collected data for later review
-            csv_path = os.path.join(output_dir, "results.csv")
-            self.data.to_csv(csv_path, index=False)
-            messagebox.showinfo(
-                "Scan Complete",
-                f"Frames saved to '{output_dir}'. Results written to '{csv_path}'",
-            )
             if self.show_map_button:
-                # Enable map button once processing is finished
-                self.show_map_button.config(state="normal")
-        except Exception as exc:
-            messagebox.showerror("Error", str(exc))
+                self.after(0, lambda: self.show_map_button.config(state="disabled"))
+
+            output_dir = OUTPUT_DIR
+            try:
+                # Step 1: Extract frames and collect GPS metadata
+                self.data = extract_frames_with_gps(mp4, srt, output_dir)
+                total_frames = len(self.data)
+                self.after(0, lambda: self.progress_var.set(f"Extracted {total_frames} frames"))
+                self.after(0, self.update_idletasks)
+
+                look_for = self.look_for_var.get()
+                for idx, row in self.data.iterrows():
+                    self.after(
+                        0,
+                        lambda idx=idx, total_frames=total_frames: self.progress_var.set(
+                            f"Processing frame {idx + 1}/{total_frames}"
+                        ),
+                    )
+                    self.after(0, self.update_idletasks)
+                    # Run AI analysis on each extracted frame
+                    results = analyze_frame(row["image_path"], look_for)
+                    if not results:
+                        continue
+                    result = results[0]
+                    # Store analysis results back into the main DataFrame
+                    self.data.at[idx, "object_type"] = result.get("object_type")
+                    self.data.at[idx, "report"] = result.get("report") or result.get("species")
+                    self.data.at[idx, "description"] = result.get("description")
+                    self.data.at[idx, "confidence"] = result.get("confidence")
+                    self.data.at[idx, "box_parameter"] = result.get("box_parameter")
+                    # Path to an image with the bounding box drawn
+                    boxed_path = row["image_path"]
+                    if result.get("box_parameter"):
+                        try:
+                            img = Image.open(row["image_path"])
+                            draw = ImageDraw.Draw(img)
+                            draw.rectangle(
+                                tuple(result["box_parameter"]), outline="blue", width=5
+                            )
+                            boxed_path = row["image_path"].rsplit(".", 1)[0] + "_boxed.jpg"
+                            img.save(boxed_path)
+                        except Exception as e:
+                            logger.error(
+                                "Failed to draw box on %s: %s", row["image_path"], e
+                            )
+                            boxed_path = row["image_path"]
+                    self.data.at[idx, "boxed_image_path"] = boxed_path
+                    self.after(0, lambda row=self.data.loc[idx]: self.add_finding(row))
+
+                self.after(0, lambda: self.progress_var.set("Processing complete"))
+                self.after(0, self.update_idletasks)
+                # Persist all collected data for later review
+                csv_path = os.path.join(output_dir, "results.csv")
+                self.data.to_csv(csv_path, index=False)
+                self.after(
+                    0,
+                    lambda: messagebox.showinfo(
+                        "Scan Complete",
+                        f"Frames saved to '{output_dir}'. Results written to '{csv_path}'",
+                    ),
+                )
+                if self.show_map_button:
+                    self.after(0, lambda: self.show_map_button.config(state="normal"))
+            except Exception as exc:
+                self.after(0, lambda: messagebox.showerror("Error", str(exc)))
+
+        threading.Thread(target=process, daemon=True).start()
 
 
 if __name__ == "__main__":
