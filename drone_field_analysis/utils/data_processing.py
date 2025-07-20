@@ -132,7 +132,7 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
         )
 
     prompt_parts.append(
-        "Return results using the appropriate function and include bounding box [x1, y1, x2, y2] using 1920x1080 coordinates."
+        "Return results by calling the appropriate function and always include the bounding box as [x1, y1, x2, y2]. Ensure the entire object is fully contained within the box. If multiple objects of the same type are present, draw a single box that tightly encloses all of them. Do not include any unrelated areas or background in the bounding box."
     )
 
     # Combine the individual prompt segments into the final instruction text
