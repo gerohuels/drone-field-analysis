@@ -21,9 +21,9 @@ A Python application for analyzing agricultural drone footage to locate bare spo
 
 
 
-The application processes `.mp4` video footage of the field along with a corresponding `.srt` file that contains GPS location data from the drone.
-It can identify bare soil patches or animals in the field, saving frames where such areas are found along with their GPS coordinates.
-All detections are visualized on a field map for easy monitoring and analysis. Each marker opens a popup containing a preview image for quick review.
+The application processes `.mp4` video footage of the field together with a matching `.srt` file containing GPS location data.
+It identifies bare soil patches or animals in the field and saves the matching frames with their coordinates to the `output/` directory.
+All detections are also visualized on a field map for easy monitoring and analysis. Each marker opens a popup with an embedded preview image for quick review.
 
 The GUI presents a scrollable list of all findings. Clicking a thumbnail opens the full-size frame along with its GPS information.
 
@@ -61,11 +61,12 @@ python main.py
 
 ## Features
 
-- Extracts one frame per second from the footage and stores its GPS location.
-- Uses the OpenAI GPT-4o model to spot large bare soil areas or animals depending on the selected option.
-- Optionally draws a bounding box around each detection on the saved frame.
-- Scrollable interface with thumbnails and descriptions of all findings.
-- Interactive map showing detections and the drone's flight path.
+- Extracts one frame per second from the video and records the GPS location for each frame.
+- Detects bare spots or animals using the OpenAI GPT-4o model and returns bounding box coordinates.
+- Automatically draws bounding boxes on the saved frames when coordinates are available.
+- Scans frames in the background while reporting progress so the interface stays responsive.
+- Scrollable interface with thumbnails that open a full-size preview with location details.
+- Saves a `results.csv` file and generates an interactive map with popups. The map can optionally display the drone's flight path.
   
 ### Dependencies
 
