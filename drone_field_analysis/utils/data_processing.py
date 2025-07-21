@@ -163,7 +163,7 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
             }
         )
         prompt_parts.append(
-            "- **Weeds**: clearly visible weeds or patches of unwanted vegetation among the crops."
+            "- **Weeds**: clearly visible weeds or patches of unwanted vegetation among the crops, especially those with a color that contrasts with the surrounding crop."
         )
 
     prompt_parts.append(
