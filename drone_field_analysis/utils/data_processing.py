@@ -163,7 +163,7 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
             }
         )
         prompt_parts.append(
-            "- **Weeds**: clearly visible weeds or patches of unwanted vegetation among the crops, especially those with a color that contrasts with the surrounding crop."
+            "- **Weeds**: Identify the presence of weeds in the image. Look for isolated or clustered patches of vegetation that differ in color, texture, or structure from the surrounding crop. Weeds typically appear greener or darker than the main crop, which may be lighter, more uniform, or dried. Focus especially on small, distinct patches that interrupt the uniformity of the crop."
         )
 
     prompt_parts.append(
