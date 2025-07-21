@@ -38,7 +38,12 @@ for large, clearly visible bare soil patches, animals, or weeds. If the model de
 matching object with high confidence it triggers the appropriate reporting function,
 printing the estimated location and confidence score.
 
-Set the `OPENAI_API_KEY` environment variable before running this script.
+## Configuration
+
+Set the `OPENAI_API_KEY` environment variable before running the program.
+All frames and analysis results are written to the directory defined in
+`drone_field_analysis/config/settings.py` (default is `output/`). Adjust this
+value if you want to store results somewhere else.
 
 ## Running the application
 
