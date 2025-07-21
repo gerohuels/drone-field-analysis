@@ -143,6 +143,12 @@ class DroneFieldGUI(tk.Tk):
         )
         self.progress_label.grid(row=8, column=0, columnspan=3, pady=(0, 10))
 
+    def clear_results(self):
+        """Remove any previously displayed findings from the UI."""
+        for widget in self.results_container.winfo_children():
+            widget.destroy()
+        self.result_images.clear()
+
     def browse_mp4(self):
         """Prompt the user to select an MP4 file."""
         path = filedialog.askopenfilename(filetypes=[("MP4 files", "*.mp4")])
@@ -245,6 +251,7 @@ class DroneFieldGUI(tk.Tk):
 
         # Only keep rows where an object was detected
         found_df = self.data.dropna(subset=["object_type"])
+        found_df = found_df[found_df["object_type"] != ""]
         if found_df.empty:
             messagebox.showinfo("No Findings", "No findings to display on the map.")
             return
@@ -344,6 +351,24 @@ class DroneFieldGUI(tk.Tk):
 
             if self.show_map_button:
                 self.after(0, lambda: self.show_map_button.config(state="disabled"))
+
+            # Clear any previous detections from the UI before scanning
+            self.after(0, self.clear_results)
+            self.data = pd.DataFrame(
+                columns=[
+                    "frame",
+                    "image_path",
+                    "latitude",
+                    "longitude",
+                    "gps_text",
+                    "object_type",
+                    "report",
+                    "description",
+                    "confidence",
+                    "box_parameter",
+                    "boxed_image_path",
+                ]
+            )
 
             output_dir = OUTPUT_DIR
             try:
