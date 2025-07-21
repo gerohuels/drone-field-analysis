@@ -163,7 +163,7 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
             }
         )
         prompt_parts.append(
-            "- **Weeds**: Identify the presence of weeds in the image. Look for isolated or clustered patches of vegetation that differ in color, texture, or structure from the surrounding crop. Weeds typically appear greener or darker than the main crop, which may be lighter, more uniform, or dried. Focus especially on small, distinct patches that interrupt the uniformity of the crop."
+            "- **Weeds**: Detect the presence of weeds in this image. Weeds are characterized by small or clustered patches of green vegetation that visually contrast with the golden or beige wheat crop. Focus on: Green plant patches that are structurally or color-wise different from the wheat Vegetation in areas of exposed soil or near crop gaps Ignore: Dark soil patches without green coloration Shadows or flattened wheat that may appear darker but match wheat color/texture Dry/dead plant matter with no distinct green tones"
         )
 
     prompt_parts.append(
