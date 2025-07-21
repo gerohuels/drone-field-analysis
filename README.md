@@ -1,7 +1,7 @@
 # drone-field-analysis
 **This app is under development.**
 
-A Python application for analyzing agricultural drone footage to locate bare spots and animals in fields. Detected areas are visualized on an interactive map.
+A Python application for analyzing agricultural drone footage to locate bare spots, animals, and weeds in fields. Detected areas are visualized on an interactive map.
 
 **Main menu**
 
@@ -30,11 +30,11 @@ The GUI presents a scrollable list of all findings. Clicking a thumbnail opens t
 ## Input files
 Place your `.mp4` video and matching `.srt` file into the `footage/` folder before running the analysis.
 
-## AI bare spot and animal detection
+## AI bare spot, animal, and weed detection
 
 The `drone_field_analysis/utils/data_processing.py` module demonstrates how to analyze the extracted frames using
 the OpenAI API. Each frame is sent to the `gpt-4o` model with instructions to look
-for large, clearly visible bare soil patches or animals. If the model detects a
+for large, clearly visible bare soil patches, animals, or weeds. If the model detects a
 matching object with high confidence it triggers the appropriate reporting function,
 printing the estimated location and confidence score.
 
@@ -53,7 +53,7 @@ python main.py
 1. Launch the program with the command above. The main window opens.
 2. Click **Browse** beside *MP4 File* and select your drone video.
 3. Click **Browse** beside *SRT File* and choose the matching subtitle file containing GPS data.
-4. Choose whether to search for *Bare spots* or *Animals* and press **Scan** to analyze each extracted frame.
+4. Choose whether to search for *Bare spots*, *Animals*, or *Weeds* and press **Scan** to analyze each extracted frame.
 5. Detected spots appear in the results list as image thumbnails.
 6. Click any thumbnail to view the full image with its GPS coordinates. The subtitle's raw GPS
    information is displayed automatically when available.
@@ -62,7 +62,7 @@ python main.py
 ## Features
 
 - Extracts one frame per second from the video and records the GPS location for each frame.
-- Detects bare spots or animals using the OpenAI GPT-4o model and returns bounding box coordinates.
+- Detects bare spots, animals, or weeds using the OpenAI GPT-4o model and returns bounding box coordinates.
 - Automatically draws bounding boxes on the saved frames when coordinates are available.
 - Scans frames in the background while reporting progress so the interface stays responsive.
 - Scrollable interface with thumbnails that open a full-size preview with location details.
@@ -70,7 +70,7 @@ python main.py
   
 ### Dependencies
 
-- [OpenAI Python](https://github.com/openai/openai-python) - Access to the GPT models for bare spot and animal detection.
+- [OpenAI Python](https://github.com/openai/openai-python) - Access to the GPT models for bare spot, animal, and weed detection.
 - [OpenCV](https://opencv.org/) - Extracts frames from the drone footage.
 - [pysrt](https://github.com/byroot/pysrt) - Parses subtitle files containing GPS coordinates.
 - [Pillow](https://python-pillow.org/) - Image loading and thumbnail generation.
@@ -80,10 +80,6 @@ python main.py
 ## Known Bugs
 
 - Bounding boxes drawn around detected objects are sometimes imprecise.
-
-## Potential Next Features
-
-- Detecting weeds
 
 ### Acknowledgments
 This project uses the Pandas library, © The Pandas Development Team, licensed under the BSD 3-Clause License.

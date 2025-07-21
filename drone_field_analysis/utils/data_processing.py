@@ -59,6 +59,18 @@ def report_animal(
     return message
 
 
+def report_weed(report: str, confidence: float, box_parameter: str) -> str:
+    """Return a short description of detected weeds."""
+
+    message = (
+        f"Report: {report} \n"
+        f"Detection confidence is {confidence:.2f}. \n"
+        f"Box coordinates: {box_parameter}."
+    )
+    logger.info("\N{herb} %s", message)
+    return message
+
+
 def analyze_frame(image_path: str, look_for: str = "bare spot"):
     """Analyze a frame using the OpenAI API.
 
@@ -131,6 +143,29 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
             "- **Animals**: clearly visible animals like deer, birds, or rabbits."
         )
 
+    if "weed" in look_for.lower():
+        tools.append(
+            {
+                "type": "function",
+                "function": {
+                    "name": "report_weed",
+                    "description": "Function to report weeds in the field",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "report": {"type": "string"},
+                            "confidence": {"type": "number"},
+                            "box_parameter": {"type": "array", "items": {"type": "integer"}},
+                        },
+                        "required": ["report", "confidence", "box_parameter"],
+                    },
+                },
+            }
+        )
+        prompt_parts.append(
+            "- **Weeds**: clearly visible weeds or patches of unwanted vegetation among the crops."
+        )
+
     prompt_parts.append(
         "Return results by calling the appropriate function and always include the bounding box as [x1, y1, x2, y2]. Ensure the entire object is fully contained within the box. If multiple objects of the same type are present, draw a single box that tightly encloses all of them. Do not include any unrelated areas or background in the bounding box."
     )
@@ -188,6 +223,18 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
                         "description": args["description"],
                         "confidence": args["confidence"],
                         "box_parameter": args.get("box_parameter"),
+                    }
+                )
+            elif tool_call.function.name == "report_weed" and args.get("confidence", 0) >= 0.85:
+                results.append(
+                    {
+                        "object_type": "weed",
+                        "report": args["report"],
+                        "confidence": args["confidence"],
+                        "box_parameter": args.get("box_parameter"),
+                        "description": report_weed(
+                            args["report"], args["confidence"], str(args.get("box_parameter"))
+                        ),
                     }
                 )
 

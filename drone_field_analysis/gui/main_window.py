@@ -88,9 +88,9 @@ class DroneFieldGUI(tk.Tk):
             row=3, column=0, sticky="e", padx=5, pady=5
         )
         # The option menu allows users to specify what objects should be
-        # detected in each frame. Choices are bare spots or animals.
+        # detected in each frame. Choices are bare spots, animals or weeds.
         self.look_for_var = tk.StringVar(value="Bare spots")
-        options = ["Bare spots", "Animals"]
+        options = ["Bare spots", "Animals", "Weeds"]
         tk.OptionMenu(self, self.look_for_var, *options).grid(
             row=3, column=1, columnspan=2, sticky="w", padx=5, pady=5
         )
@@ -286,11 +286,17 @@ class DroneFieldGUI(tk.Tk):
 
             # Tooltip as plain text only (image in tooltip not reliable)
             tooltip = entry.get("object_type", "")
+            color_map = {
+                "weed": "green",
+                "bare spot": "beige",
+                "animal": "red",
+            }
+            icon_color = color_map.get(entry.get("object_type", ""), "beige")
             folium.Marker(
                 location=[entry["latitude"], entry["longitude"]],
                 popup=popup,
                 tooltip=tooltip,
-                icon=folium.Icon(color="beige"),
+                icon=folium.Icon(color=icon_color),
             ).add_to(mymap)
 
         self.add_flight_path(mymap)
