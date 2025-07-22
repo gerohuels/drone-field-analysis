@@ -64,6 +64,15 @@ python main.py
    information is displayed automatically when available.
 7. When scanning finishes, press **Show on Map** to open a browser displaying all detections. Enable *Show Flight Path* to visualize the drone's route.
 
+## Button Guide
+
+- **Browse** – open a file dialog to select the MP4 footage or matching SRT subtitle file.
+- **Look For** – drop-down menu to pick whether to search for *Bare spots*, *Animals*, or *Weeds*.
+- **Scan** – start the extraction and analysis process for every frame.
+- **Show on Map** – open the interactive map of all detections once scanning is complete.
+- **Show Flight Path** – toggle drawing the drone's route on the map.
+- Clicking a **thumbnail** in the results list opens the full-sized image with its GPS information.
+
 ## Features
 
 - Extracts one frame per second from the video and records the GPS location for each frame.
@@ -71,7 +80,7 @@ python main.py
 - Automatically draws bounding boxes on the saved frames when coordinates are available.
 - Scans frames in the background while reporting progress so the interface stays responsive.
 - Scrollable interface with thumbnails that open a full-size preview with location details.
-- Saves a `results.csv` file and generates an interactive map with popups. The map can optionally display the drone's flight path.
+- Saves a `results.csv` file and generates an interactive map with popups. Markers are color-coded (weeds green, bare spots beige, animals red) and the map can optionally display the drone's flight path.
   
 ### Dependencies
 
