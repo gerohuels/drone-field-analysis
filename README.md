@@ -9,10 +9,11 @@ A Python application for analyzing agricultural drone footage to locate bare spo
 
 **Full-size view of a selected  thumbnail**
 
+
+
 **Map view showing detections with an open tooltip**
 
-![Map view showing detections with an open tooltip](https://github.com/user-attachments/assets/10dbed14-80cc-4109-a7cd-b34165f31edb)
-
+<img width="515" height="393" alt="Screenshot 2025-07-23 at 15 37 44" src="https://github.com/user-attachments/assets/93e63f0d-eee5-42dc-923a-f57e880533be" />
 
 
 The application processes `.mp4` video footage of the field together with a matching `.srt` file containing GPS location data.
