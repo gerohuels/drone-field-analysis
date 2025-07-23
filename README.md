@@ -9,7 +9,7 @@ A Python application for analyzing agricultural drone footage to locate bare spo
 
 **Full-size view of a selected  thumbnail**
 
-<img width="776" height="705" alt="Screenshot 2025-07-23 at 23 25 50" src="https://github.com/user-attachments/assets/57f05a28-fcb8-48d8-9484-184016b08476" />
+<img width="555" height="555" alt="Screenshot 2025-07-23 at 23 25 50" src="https://github.com/user-attachments/assets/57f05a28-fcb8-48d8-9484-184016b08476" />
 
 **Map view showing detections with an open tooltip**
 
