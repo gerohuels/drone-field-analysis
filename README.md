@@ -88,9 +88,6 @@ python main.py
 - [Folium](https://github.com/python-visualization/folium) - Renders the interactive map with popups.
 - [pandas](https://pandas.pydata.org/) - Stores extraction and detection results in a single DataFrame.
 
-## Known Bugs
-
-- Bounding boxes drawn around detected objects are sometimes imprecise.
 
 ### Acknowledgments
 This project uses the Pandas library, © The Pandas Development Team, licensed under the BSD 3-Clause License.
