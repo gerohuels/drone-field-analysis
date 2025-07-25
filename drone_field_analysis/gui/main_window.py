@@ -94,9 +94,11 @@ class DroneFieldGUI(tk.Tk):
         tk.OptionMenu(self, self.look_for_var, *options).grid(
             row=3, column=1, columnspan=2, sticky="w", padx=5, pady=5
         )
-        tk.Button(self, text="Scan", command=self.scan).grid(
-            row=4, column=0, columnspan=3, pady=10
-        )
+        # Action buttons are placed at the bottom of the window. The Scan button
+        # sits to the left of the "Show on Map" button so users can easily start
+        # a scan and then display the results.
+        self.scan_button = tk.Button(self, text="Scan", command=self.scan)
+        self.scan_button.grid(row=6, column=0, pady=10, padx=(10, 5))
         self.results_canvas = tk.Canvas(self, width=400, height=200)
         scrollbar = tk.Scrollbar(
             self, orient="vertical", command=self.results_canvas.yview
@@ -125,7 +127,7 @@ class DroneFieldGUI(tk.Tk):
             command=self.show_map,
             state="disabled",
         )
-        self.show_map_button.grid(row=6, column=0, columnspan=3, pady=10)
+        self.show_map_button.grid(row=6, column=1, columnspan=2, pady=10, padx=(5, 10))
 
         # Toggle whether the flight path polyline is drawn on the map
         self.show_path_var = tk.BooleanVar(value=True)
