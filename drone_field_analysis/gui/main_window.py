@@ -9,6 +9,7 @@ from typing import cast
 import os
 import webbrowser
 import base64
+import shutil
 
 import folium
 
@@ -140,6 +141,12 @@ class DroneFieldGUI(tk.Tk):
         # Label that displays extraction and processing progress
         self.progress_label = tk.Label(self, textvariable=self.progress_var)
         self.progress_label.grid(row=8, column=0, columnspan=3, pady=(0, 10))
+
+        tk.Button(
+            self,
+            text="Clear Output",
+            command=self.clear_output,
+        ).grid(row=9, column=0, columnspan=3, pady=(0, 10))
 
     def browse_mp4(self):
         """Prompt the user to select an MP4 file."""
@@ -323,6 +330,34 @@ class DroneFieldGUI(tk.Tk):
                     weight=2,
                     opacity=0.7,
                 ).add_to(mymap)
+
+    def clear_output(self):
+        """Delete all files in the output directory after user confirmation."""
+        if not os.path.isdir(OUTPUT_DIR):
+            messagebox.showinfo(
+                "Output Folder Missing",
+                f"The directory '{OUTPUT_DIR}' does not exist.",
+            )
+            return
+
+        if not messagebox.askyesno(
+            "Confirm Delete", f"Delete all contents of '{OUTPUT_DIR}'?"
+        ):
+            return
+
+        for name in os.listdir(OUTPUT_DIR):
+            path = os.path.join(OUTPUT_DIR, name)
+            try:
+                if os.path.isfile(path) or os.path.islink(path):
+                    os.unlink(path)
+                elif os.path.isdir(path):
+                    shutil.rmtree(path)
+            except Exception as exc:
+                logger.error("Failed to delete %s: %s", path, exc)
+
+        messagebox.showinfo(
+            "Output Cleared", f"All contents of '{OUTPUT_DIR}' have been deleted."
+        )
 
     def scan(self):
         """Run frame extraction and bare spot detection in a background thread."""
