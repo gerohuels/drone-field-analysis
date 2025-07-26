@@ -23,6 +23,7 @@ It identifies bare soil patches or animals in the field and saves the matching f
 All detections are also visualized on a field map for easy monitoring and analysis. Each marker opens a popup with an embedded preview image for quick review.
 
 The GUI presents a scrollable list of all findings. Clicking a thumbnail opens the full-size frame along with its GPS information.
+Use the **Clear Output** button at any time to remove old results from the output directory.
 
 ## Input files
 Place your `.mp4` video and matching `.srt` file into the `footage/` folder before running the analysis.
@@ -60,6 +61,7 @@ python main.py
 6. Click any thumbnail to view the full image with its GPS coordinates. The subtitle's raw GPS
    information is displayed automatically when available.
 7. When scanning finishes, press **Show on Map** to open a browser displaying all detections. Enable *Show Flight Path* to visualize the drone's route.
+8. Press **Clear Output** to delete all extracted frames and results once you no longer need them.
 
 ## Button Guide
 
@@ -68,6 +70,7 @@ python main.py
 - **Scan** – start the extraction and analysis process for every frame.
 - **Show on Map** – open the interactive map of all detections once scanning is complete.
 - **Show Flight Path** – toggle drawing the drone's route on the map.
+- **Clear Output** – delete everything in the output folder after confirmation.
 - Clicking a **thumbnail** in the results list opens the full-sized image with its GPS information.
 
 ## Features
@@ -77,6 +80,7 @@ python main.py
 - Automatically draws bounding boxes on the saved frames when coordinates are available.
 - Scans frames in the background while reporting progress so the interface stays responsive.
 - Scrollable interface with thumbnails that open a full-size preview with location details.
+- Built-in button to clear the output directory for a fresh start.
 - Saves a `results.csv` file and generates an interactive map with popups. Markers are color-coded (weeds green, bare spots beige, animals red) and the map can optionally display the drone's flight path.
   
 ### Dependencies
