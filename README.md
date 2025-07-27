@@ -1,6 +1,11 @@
 # drone-field-analysis
 **This app is under development.**
 
+Drone Field Analysis makes it simple for growers to see problem spots in their fields. Just load a drone video and its GPS subtitles and the app will highlight bare soil areas, animals, or weeds. Results are shown as pictures and pins on a map for easy viewing.
+
+
+## Technical overview
+
 A Python application for analyzing agricultural drone footage to locate bare spots, animals, and weeds in fields. Detected areas are visualized on an interactive map.
 
 **Main menu**
@@ -74,15 +79,17 @@ python main.py
 - Clicking a **thumbnail** in the results list opens the full-sized image with its GPS information.
 
 ## Features
-
-- Extracts one frame per second from the video and records the GPS location for each frame.
-- Detects bare spots, animals, or weeds using the OpenAI GPT-4o model and returns bounding box coordinates.
-- Automatically draws bounding boxes on the saved frames when coordinates are available.
-- Scans frames in the background while reporting progress so the interface stays responsive.
-- Scrollable interface with thumbnails that open a full-size preview with location details.
-- Built-in button to clear the output directory for a fresh start.
-- Saves a `results.csv` file and generates an interactive map with popups. Markers are color-coded (weeds green, bare spots beige, animals red) and the map can optionally display the drone's flight path.
+The list below highlights the technical capabilities implemented by the application.
   
+- Extracts one frame per second from the video, pairing each frame with GPS data from the subtitle file.
+- Runs object detection with the OpenAI GPT-4o model, returning bounding box coordinates for each finding.
+- Draws bounding boxes on the saved frames using OpenCV for easy visual confirmation.
+- Stores all metadata in a pandas DataFrame and writes a `results.csv` file for further analysis.
+- Processes frames in a background thread to keep the Tkinter interface responsive.
+- Presents a scrollable list of thumbnails that open full-size images with detailed location information.
+- Generates an interactive Folium map with color-coded markers and optional display of the drone's flight path.
+- Provides a button to clear the output directory for a new run.
+
 ### Dependencies
 
 - [OpenAI Python](https://github.com/openai/openai-python) - Access to the GPT models for bare spot, animal, and weed detection.
