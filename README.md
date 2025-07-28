@@ -30,8 +30,10 @@ All detections are also visualized on a field map for easy monitoring and analys
 The GUI presents a scrollable list of all findings. Clicking a thumbnail opens the full-size frame along with its GPS information.
 Use the **Clear Output** button at any time to remove old results from the output directory.
 
+
 ## Input files
 Place your `.mp4` video and matching `.srt` file into the `footage/` folder before running the analysis.
+
 
 ## AI bare spot, animal, and weed detection
 
@@ -40,6 +42,7 @@ the OpenAI API. Each frame is sent to the `gpt-4o` model with instructions to lo
 for large, clearly visible bare soil patches, animals, or weeds. If the model detects a
 matching object with high confidence it triggers the appropriate reporting function,
 printing the estimated location and confidence score.
+
 
 ## Configuration
 
@@ -56,6 +59,7 @@ Install the dependencies listed in `requirements.txt` and start the GUI with:
 python main.py
 ```
 
+
 ## User Flow
 
 1. Launch the program with the command above. The main window opens.
@@ -68,6 +72,7 @@ python main.py
 7. When scanning finishes, press **Show on Map** to open a browser displaying all detections. Enable *Show Flight Path* to visualize the drone's route.
 8. Press **Clear Output** to delete all extracted frames and results once you no longer need them.
 
+
 ## Button Guide
 
 - **Browse** – open a file dialog to select the MP4 footage or matching SRT subtitle file.
@@ -77,6 +82,7 @@ python main.py
 - **Show Flight Path** – toggle drawing the drone's route on the map.
 - **Clear Output** – delete everything in the output folder after confirmation.
 - Clicking a **thumbnail** in the results list opens the full-sized image with its GPS information.
+
 
 ## Features
 The list below highlights the technical capabilities implemented by the application.
@@ -90,6 +96,7 @@ The list below highlights the technical capabilities implemented by the applicat
 - Generates an interactive Folium map with color-coded markers and optional display of the drone's flight path.
 - Provides a button to clear the output directory for a new run.
 
+
 ### Dependencies
 
 - [OpenAI Python](https://github.com/openai/openai-python) - Access to the GPT models for bare spot, animal, and weed detection.
@@ -98,6 +105,7 @@ The list below highlights the technical capabilities implemented by the applicat
 - [Pillow](https://python-pillow.org/) - Image loading and thumbnail generation.
 - [Folium](https://github.com/python-visualization/folium) - Renders the interactive map with popups.
 - [pandas](https://pandas.pydata.org/) - Stores extraction and detection results in a single DataFrame.
+
 
 
 ### Acknowledgments
