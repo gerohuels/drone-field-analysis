@@ -35,15 +35,15 @@ Place your `.mp4` video and matching `.srt` file into the `footage/` folder befo
 
 ## AI bare spot, animal, and weed detection
 
-The `drone_field_analysis/utils/data_processing.py` module demonstrates how to analyze the extracted frames using
-the OpenAI API. Each frame is sent to the `gpt-4o` model with instructions to look
-for large, clearly visible bare soil patches, animals, or weeds. If the model detects a
-matching object with high confidence it triggers the appropriate reporting function,
-printing the estimated location and confidence score.
+The `drone_field_analysis/utils/data_processing.py` module demonstrates how to
+analyze the extracted frames using a locally running LLM via LangChain. Each
+frame is sent to the model together with instructions to look for bare soil
+patches, animals, or weeds. The model is expected to return a JSON description
+of any detections, including bounding box coordinates.
 
 ## Configuration
 
-Set the `OPENAI_API_KEY` environment variable before running the program.
+Ensure a compatible LLM is running locally (for example `ollama run llava`).
 All frames and analysis results are written to the directory defined in
 `drone_field_analysis/config/settings.py` (default is `output/`). Adjust this
 value if you want to store results somewhere else.
@@ -82,7 +82,7 @@ python main.py
 The list below highlights the technical capabilities implemented by the application.
   
 - Extracts one frame per second from the video, pairing each frame with GPS data from the subtitle file.
-- Runs object detection with the OpenAI GPT-4o model, returning bounding box coordinates for each finding.
+- Runs object detection with a local LLM via LangChain, returning bounding box coordinates for each finding.
 - Draws bounding boxes on the saved frames using OpenCV for easy visual confirmation.
 - Stores all metadata in a pandas DataFrame and writes a `results.csv` file for further analysis.
 - Processes frames in a background thread to keep the Tkinter interface responsive.
@@ -92,7 +92,7 @@ The list below highlights the technical capabilities implemented by the applicat
 
 ### Dependencies
 
-- [OpenAI Python](https://github.com/openai/openai-python) - Access to the GPT models for bare spot, animal, and weed detection.
+- [LangChain](https://github.com/langchain-ai/langchain) - Provides the interface to the local LLM.
 - [OpenCV](https://opencv.org/) - Extracts frames from the drone footage.
 - [pysrt](https://github.com/byroot/pysrt) - Parses subtitle files containing GPS coordinates.
 - [Pillow](https://python-pillow.org/) - Image loading and thumbnail generation.
