@@ -11,11 +11,14 @@ import logging
 import os
 from openai import OpenAI
 
+from .agent_delegation import DelegatingAgent
+
 from ..config.settings import OUTPUT_DIR
 
 
 logger = logging.getLogger(__name__)
 client = OpenAI()
+delegator = DelegatingAgent()
 
 
 def encode_image(image_path: str) -> str:
@@ -41,7 +44,7 @@ def report_bare_spot(report: str, confidence: float, box_parameter: str) -> str:
         f"Detection confidence is {confidence:.2f}. \n"
         f"Box coordinates: {box_parameter}."
     )
-    logger.info("\N{microscope} %s", message)
+    logger.info("\N{MICROSCOPE} %s", message)
     return message
 
 
@@ -55,7 +58,7 @@ def report_animal(
         f"Detection confidence is {confidence:.2f}. \n"
         f"Box coordinates: {box_parameter}."
     )
-    logger.info("\N{dog} %s", message)
+    logger.info("\N{DOG} %s", message)
     return message
 
 
@@ -67,7 +70,7 @@ def report_weed(report: str, confidence: float, box_parameter: str) -> str:
         f"Detection confidence is {confidence:.2f}. \n"
         f"Box coordinates: {box_parameter}."
     )
-    logger.info("\N{herb} %s", message)
+    logger.info("\N{HERB} %s", message)
     return message
 
 
@@ -107,7 +110,10 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
                         "properties": {
                             "report": {"type": "string"},
                             "confidence": {"type": "number"},
-                            "box_parameter": {"type": "array", "items": {"type": "integer"}},
+                            "box_parameter": {
+                                "type": "array",
+                                "items": {"type": "integer"},
+                            },
                         },
                         "required": ["report", "confidence", "box_parameter"],
                     },
@@ -132,9 +138,17 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
                             "species": {"type": "string"},
                             "description": {"type": "string"},
                             "confidence": {"type": "number"},
-                            "box_parameter": {"type": "array", "items": {"type": "integer"}},
+                            "box_parameter": {
+                                "type": "array",
+                                "items": {"type": "integer"},
+                            },
                         },
-                        "required": ["species", "description", "confidence", "box_parameter"],
+                        "required": [
+                            "species",
+                            "description",
+                            "confidence",
+                            "box_parameter",
+                        ],
                     },
                 },
             }
@@ -155,7 +169,10 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
                         "properties": {
                             "report": {"type": "string"},
                             "confidence": {"type": "number"},
-                            "box_parameter": {"type": "array", "items": {"type": "integer"}},
+                            "box_parameter": {
+                                "type": "array",
+                                "items": {"type": "integer"},
+                            },
                         },
                         "required": ["report", "confidence", "box_parameter"],
                     },
@@ -185,7 +202,10 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
                     {"type": "text", "text": prompt_text},
                     {
                         "type": "image_url",
-                        "image_url": {"url": f"data:image/jpeg;base64,{base64_image}", "detail": "high"},
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{base64_image}",
+                            "detail": "high",
+                        },
                     },
                 ],
             }
@@ -202,7 +222,10 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
         for tool_call in tool_calls:
             args = json.loads(tool_call.function.arguments)
             # Only accept detections with reasonably high confidence
-            if tool_call.function.name == "report_bare_spot" and args.get("confidence", 0) >= 0.85:
+            if (
+                tool_call.function.name == "report_bare_spot"
+                and args.get("confidence", 0) >= 0.85
+            ):
                 results.append(
                     {
                         "object_type": "bare spot",
@@ -210,11 +233,16 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
                         "confidence": args["confidence"],
                         "box_parameter": args.get("box_parameter"),
                         "description": report_bare_spot(
-                            args["report"], args["confidence"], str(args.get("box_parameter"))
+                            args["report"],
+                            args["confidence"],
+                            str(args.get("box_parameter")),
                         ),
                     }
                 )
-            elif tool_call.function.name == "report_animal" and args.get("confidence", 0) >= 0.85:
+            elif (
+                tool_call.function.name == "report_animal"
+                and args.get("confidence", 0) >= 0.85
+            ):
                 # Append details when an animal has been confidently detected
                 results.append(
                     {
@@ -225,7 +253,10 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
                         "box_parameter": args.get("box_parameter"),
                     }
                 )
-            elif tool_call.function.name == "report_weed" and args.get("confidence", 0) >= 0.85:
+            elif (
+                tool_call.function.name == "report_weed"
+                and args.get("confidence", 0) >= 0.85
+            ):
                 results.append(
                     {
                         "object_type": "weed",
@@ -233,13 +264,31 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
                         "confidence": args["confidence"],
                         "box_parameter": args.get("box_parameter"),
                         "description": report_weed(
-                            args["report"], args["confidence"], str(args.get("box_parameter"))
+                            args["report"],
+                            args["confidence"],
+                            str(args.get("box_parameter")),
                         ),
                     }
                 )
 
     # ``None`` signals that the model did not detect anything of interest
     return results if results else None
+
+
+def analyze_frame_with_agents(image_path: str, look_for: str = "bare spot") -> str:
+    """Analyze ``image_path`` using the DelegatingAgent wrapper.
+
+    This helper shows how to use the :class:`DelegatingAgent` defined in
+    :mod:`drone_field_analysis.utils.agent_delegation` to delegate detection
+    tasks to specialised Agents. The return value is the text reply from the
+    selected Agent.
+    """
+
+    try:
+        return delegator.analyze(image_path, look_for)
+    except Exception as exc:  # pragma: no cover - network interaction
+        logger.error("Agent analysis failed: %s", exc)
+        return ""
 
 
 if __name__ == "__main__":
