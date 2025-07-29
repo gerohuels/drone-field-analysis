@@ -43,6 +43,13 @@ for large, clearly visible bare soil patches, animals, or weeds. If the model de
 matching object with high confidence it triggers the appropriate reporting function,
 printing the estimated location and confidence score.
 
+Starting with this version the project also includes an optional multi-agent
+pipeline built with the **OpenAI Agents SDK**. The new
+`DelegatingAgent` class in `drone_field_analysis/utils/agent_delegation.py`
+instantiates separate assistants for bare spots, animals and weeds. A top-level
+agent delegates each image to the relevant assistant, demonstrating how the
+Agents API can orchestrate specialised detectors.
+
 
 ## Configuration
 
