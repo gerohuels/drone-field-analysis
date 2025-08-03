@@ -100,6 +100,11 @@ class DroneFieldGUI(tk.Tk):
         # quickly start a scan, view the map and remove old results.
         self.scan_button = tk.Button(self, text="Scan", command=self.scan)
         self.scan_button.grid(row=6, column=0, pady=10, padx=(10, 5))
+
+        # Disable the Scan button until both files are selected
+        self.update_scan_button_state()
+        self.mp4_path.trace_add("write", lambda *_: self.update_scan_button_state())
+        self.srt_path.trace_add("write", lambda *_: self.update_scan_button_state())
         self.results_canvas = tk.Canvas(self, width=400, height=200)
         scrollbar = tk.Scrollbar(
             self, orient="vertical", command=self.results_canvas.yview
@@ -150,15 +155,30 @@ class DroneFieldGUI(tk.Tk):
 
     def browse_mp4(self):
         """Prompt the user to select an MP4 file."""
-        path = filedialog.askopenfilename(filetypes=[("MP4 files", "*.mp4")])
+        initial_dir = os.path.join(os.getcwd(), "footage")
+        path = filedialog.askopenfilename(
+            filetypes=[("MP4 files", "*.mp4")], initialdir=initial_dir
+        )
         if path:
             self.mp4_path.set(path)
 
     def browse_srt(self):
         """Prompt the user to select an SRT subtitle file."""
-        path = filedialog.askopenfilename(filetypes=[("SRT files", "*.srt")])
+        initial_dir = os.path.join(os.getcwd(), "footage")
+        path = filedialog.askopenfilename(
+            filetypes=[("SRT files", "*.srt")], initialdir=initial_dir
+        )
         if path:
             self.srt_path.set(path)
+
+    def update_scan_button_state(self) -> None:
+        """Enable Scan button only when MP4 and SRT files are set."""
+        if not self.scan_button:
+            return
+        mp4 = self.mp4_path.get()
+        srt = self.srt_path.get()
+        state = "normal" if mp4 and srt else "disabled"
+        self.scan_button.config(state=state)
 
 
     def show_full_image(
