@@ -32,6 +32,9 @@ class DroneFieldGUI(tk.Tk):
         self.title("Drone Field Analyzer")
         self.mp4_path = tk.StringVar()
         self.srt_path = tk.StringVar()
+        # Allow users to choose which GPT model will analyze frames
+        self.model_options = {"GPT-4": "gpt-4o", "GPT-5": "gpt-4.1"}
+        self.model_choice_var = tk.StringVar(value="GPT-4")
         # Store metadata and detection results for each extracted frame
         self.data = pd.DataFrame(
             columns=[
@@ -94,6 +97,13 @@ class DroneFieldGUI(tk.Tk):
         options = ["Bare spots", "Animals", "Weeds"]
         tk.OptionMenu(self, self.look_for_var, *options).grid(
             row=3, column=1, columnspan=2, sticky="w", padx=5, pady=5
+        )
+
+        tk.Label(self, text="Model:").grid(
+            row=4, column=0, sticky="e", padx=5, pady=5
+        )
+        tk.OptionMenu(self, self.model_choice_var, *self.model_options.keys()).grid(
+            row=4, column=1, columnspan=2, sticky="w", padx=5, pady=5
         )
         # Action buttons are placed at the bottom of the window. The Scan,
         # Show on Map and Clear Output buttons share the same row so users can
@@ -387,6 +397,7 @@ class DroneFieldGUI(tk.Tk):
                 self.after(0, self.update_idletasks)
 
                 look_for = self.look_for_var.get()
+                model = self.model_options[self.model_choice_var.get()]
                 for idx, row in self.data.iterrows():
                     self.after(
                         0,
@@ -396,7 +407,7 @@ class DroneFieldGUI(tk.Tk):
                     )
                     self.after(0, self.update_idletasks)
                     # Run AI analysis on each extracted frame
-                    results = analyze_frame(row["image_path"], look_for)
+                    results = analyze_frame(row["image_path"], look_for, model)
                     if not results:
                         continue
                     result = results[0]

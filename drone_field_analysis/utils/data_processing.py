@@ -71,13 +71,16 @@ def report_weed(report: str, confidence: float, box_parameter: str) -> str:
     return message
 
 
-def analyze_frame(image_path: str, look_for: str = "bare spot"):
+def analyze_frame(image_path: str, look_for: str = "bare spot", model: str = "gpt-4o"):
     """Analyze a frame using the OpenAI API.
 
     Parameters
     ----------
     image_path: str
         Path to the frame image.
+    model: str, optional
+        OpenAI model identifier to use when analyzing the frame. Defaults to
+        ``"gpt-4o"``.
 
     Returns
     -------
@@ -177,7 +180,7 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
     # will call our ``report_*`` functions if it detects any matching
     # objects in the frame.
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model=model,
         messages=[
             {
                 "role": "user",
