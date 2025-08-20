@@ -24,7 +24,7 @@ A Python application for analyzing agricultural drone footage to locate bare spo
 
 
 The application processes `.mp4` video footage of the field together with a matching `.srt` file containing GPS location data.
-It identifies bare soil patches or animals in the field and saves the matching frames with their coordinates to the `output/` directory.
+It identifies bare soil patches, animals, or weeds in the field and saves the matching frames with their coordinates to the `output/` directory.
 All detections are also visualized on a field map for easy monitoring and analysis. Each marker opens a popup with an embedded preview image for quick review.
 
 The GUI presents a scrollable list of all findings. Clicking a thumbnail opens the full-size frame along with its GPS information.
@@ -88,12 +88,13 @@ python main.py
 The list below highlights the technical capabilities implemented by the application.
   
 - Extracts one frame per second from the video, pairing each frame with GPS data from the subtitle file.
+- Lets you choose whether to search for **bare spots**, **animals**, or **weeds**.
 - Runs object detection with the OpenAI GPT-4o model, returning bounding box coordinates for each finding.
 - Draws bounding boxes on the saved frames using OpenCV for easy visual confirmation.
 - Stores all metadata in a pandas DataFrame and writes a `results.csv` file for further analysis.
-- Processes frames in a background thread to keep the Tkinter interface responsive.
+- Processes frames in a background thread and shows progress updates so the Tkinter interface stays responsive.
 - Presents a scrollable list of thumbnails that open full-size images with detailed location information.
-- Generates an interactive Folium map with color-coded markers and optional display of the drone's flight path.
+- Generates an interactive Folium map with color-coded markers, embedded preview images, and an optional drone flight path overlay.
 - Provides a button to clear the output directory for a new run.
 
 
