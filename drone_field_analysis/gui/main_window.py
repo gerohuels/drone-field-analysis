@@ -4,7 +4,7 @@ import logging
 import threading
 import tkinter as tk
 
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, ttk
 from typing import cast
 import os
 import webbrowser
@@ -55,63 +55,75 @@ class DroneFieldGUI(tk.Tk):
         self.results_canvas = None
         self.results_container = None
         self.show_map_button = None
-        self.progress_var = tk.StringVar(value="")
+        # Progress bar variables
+        self.progress_var = tk.DoubleVar(value=0)
+        self.progress_text = tk.StringVar(value="")
+        self.progress_bar = None
         self.progress_label = None
         self.create_widgets()
 
     def create_widgets(self):
         """Create all Tkinter widgets used in the main window."""
-        tk.Label(
-            self, text="Drone Field Analyzer", font=("Helvetica", 16, "bold")
-        ).grid(row=0, column=0, columnspan=3, pady=10)
+        style = ttk.Style(self)
+        style.theme_use("clam")
 
-        tk.Label(self, text="MP4 File:").grid(
+        # Make the layout responsive
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=0)
+        self.rowconfigure(3, weight=1)
+
+        ttk.Label(
+            self, text="Drone Field Analyzer", font=("Helvetica", 16, "bold")
+        ).grid(row=0, column=0, columnspan=2, pady=10)
+
+        file_frame = ttk.Frame(self)
+        file_frame.grid(row=1, column=0, columnspan=2, sticky="ew", padx=10)
+        file_frame.columnconfigure(1, weight=1)
+
+        ttk.Label(file_frame, text="MP4 File:").grid(
+            row=0, column=0, sticky="e", padx=5, pady=5
+        )
+        ttk.Entry(file_frame, textvariable=self.mp4_path).grid(
+            row=0, column=1, padx=5, pady=5, sticky="ew"
+        )
+        ttk.Button(file_frame, text="Browse", command=self.browse_mp4).grid(
+            row=0, column=2, padx=5, pady=5
+        )
+
+        ttk.Label(file_frame, text="SRT File:").grid(
             row=1, column=0, sticky="e", padx=5, pady=5
         )
-        tk.Entry(self, width=40, textvariable=self.mp4_path).grid(
-            row=1, column=1, padx=5, pady=5
+        ttk.Entry(file_frame, textvariable=self.srt_path).grid(
+            row=1, column=1, padx=5, pady=5, sticky="ew"
         )
-        tk.Button(self, text="Browse", command=self.browse_mp4).grid(
+        ttk.Button(file_frame, text="Browse", command=self.browse_srt).grid(
             row=1, column=2, padx=5, pady=5
         )
 
-        tk.Label(self, text="SRT File:").grid(
-            row=2, column=0, sticky="e", padx=5, pady=5
-        )
-        tk.Entry(self, width=40, textvariable=self.srt_path).grid(
-            row=2, column=1, padx=5, pady=5
-        )
-        tk.Button(self, text="Browse", command=self.browse_srt).grid(
-            row=2, column=2, padx=5, pady=5
-        )
-
-        tk.Label(self, text="Look For:").grid(
-            row=3, column=0, sticky="e", padx=5, pady=5
-        )
-        # The option menu allows users to specify what objects should be
-        # detected in each frame. Choices are bare spots, animals or weeds.
+        options_frame = ttk.Frame(self)
+        options_frame.grid(row=2, column=0, columnspan=2, sticky="w", padx=10)
+        ttk.Label(options_frame, text="Look For:").grid(row=0, column=0, padx=5)
         self.look_for_var = tk.StringVar(value="Bare spots")
         options = ["Bare spots", "Animals", "Weeds"]
-        tk.OptionMenu(self, self.look_for_var, *options).grid(
-            row=3, column=1, columnspan=2, sticky="w", padx=5, pady=5
-        )
-        # Action buttons are placed at the bottom of the window. The Scan,
-        # Show on Map and Clear Output buttons share the same row so users can
-        # quickly start a scan, view the map and remove old results.
-        self.scan_button = tk.Button(self, text="Scan", command=self.scan)
-        self.scan_button.grid(row=6, column=0, pady=10, padx=(10, 5))
+        ttk.Combobox(
+            options_frame,
+            textvariable=self.look_for_var,
+            values=options,
+            state="readonly",
+            width=15,
+        ).grid(row=0, column=1, padx=5)
+
         self.results_canvas = tk.Canvas(self, width=400, height=200)
-        scrollbar = tk.Scrollbar(
+        self.results_canvas.grid(
+            row=3, column=0, padx=10, pady=5, sticky="nsew"
+        )
+        scrollbar = ttk.Scrollbar(
             self, orient="vertical", command=self.results_canvas.yview
         )
+        scrollbar.grid(row=3, column=1, sticky="ns", pady=5)
         self.results_canvas.configure(yscrollcommand=scrollbar.set)
 
-        self.results_canvas.grid(
-            row=5, column=0, columnspan=3, padx=10, pady=5, sticky="nsew"
-        )
-        scrollbar.grid(row=5, column=3, sticky="ns")
-
-        self.results_container = tk.Frame(self.results_canvas)
+        self.results_container = ttk.Frame(self.results_canvas)
         self.results_canvas.create_window(
             (0, 0), window=self.results_container, anchor="nw"
         )
@@ -122,31 +134,36 @@ class DroneFieldGUI(tk.Tk):
             ),
         )
 
-        self.show_map_button = tk.Button(
-            self,
+        action_frame = ttk.Frame(self)
+        action_frame.grid(row=4, column=0, columnspan=2, pady=10)
+        self.scan_button = ttk.Button(action_frame, text="Scan", command=self.scan)
+        self.scan_button.grid(row=0, column=0, padx=(0, 5))
+        self.show_map_button = ttk.Button(
+            action_frame,
             text="Show on Map",
             command=self.show_map,
             state="disabled",
         )
-        self.show_map_button.grid(row=6, column=1, pady=10, padx=5)
+        self.show_map_button.grid(row=0, column=1, padx=5)
+        ttk.Button(
+            action_frame,
+            text="Clear Output",
+            command=self.clear_output,
+        ).grid(row=0, column=2, padx=(5, 0))
 
-        # Toggle whether the flight path polyline is drawn on the map
         self.show_path_var = tk.BooleanVar(value=True)
-        tk.Checkbutton(
+        ttk.Checkbutton(
             self,
             text="Show Flight Path",
             variable=self.show_path_var,
-        ).grid(row=7, column=0, columnspan=3)
+        ).grid(row=5, column=0, columnspan=2)
 
-        # Label that displays extraction and processing progress
-        self.progress_label = tk.Label(self, textvariable=self.progress_var)
-        self.progress_label.grid(row=8, column=0, columnspan=3, pady=(0, 10))
-
-        tk.Button(
-            self,
-            text="Clear Output",
-            command=self.clear_output,
-        ).grid(row=6, column=2, pady=10, padx=(5, 10))
+        self.progress_bar = ttk.Progressbar(
+            self, variable=self.progress_var, maximum=1
+        )
+        self.progress_bar.grid(row=6, column=0, columnspan=2, sticky="ew", padx=10)
+        self.progress_label = ttk.Label(self, textvariable=self.progress_text)
+        self.progress_label.grid(row=7, column=0, columnspan=2, pady=(0, 10))
 
     def browse_mp4(self):
         """Prompt the user to select an MP4 file."""
@@ -234,7 +251,7 @@ class DroneFieldGUI(tk.Tk):
             ),
         )
         text = f"Report: {report}\nFinding: {object_type}"
-        tk.Label(frame, text=text, justify="left", wraplength=250).pack(
+        ttk.Label(frame, text=text, justify="left", wraplength=250).pack(
             side="left", padx=5
         )
 
@@ -383,14 +400,20 @@ class DroneFieldGUI(tk.Tk):
                 # Step 1: Extract frames and collect GPS metadata
                 self.data = extract_frames_with_gps(mp4, srt, output_dir)
                 total_frames = len(self.data)
-                self.after(0, lambda: self.progress_var.set(f"Extracted {total_frames} frames"))
+                self.after(
+                    0, lambda: self.progress_bar.config(maximum=total_frames)
+                )
+                self.after(
+                    0, lambda: self.progress_text.set(f"Extracted {total_frames} frames")
+                )
                 self.after(0, self.update_idletasks)
 
                 look_for = self.look_for_var.get()
                 for idx, row in self.data.iterrows():
+                    self.after(0, lambda idx=idx: self.progress_var.set(idx + 1))
                     self.after(
                         0,
-                        lambda idx=idx, total_frames=total_frames: self.progress_var.set(
+                        lambda idx=idx, total_frames=total_frames: self.progress_text.set(
                             f"Processing frame {idx + 1}/{total_frames}"
                         ),
                     )
@@ -425,7 +448,7 @@ class DroneFieldGUI(tk.Tk):
                     self.data.at[idx, "boxed_image_path"] = boxed_path
                     self.after(0, lambda row=self.data.loc[idx]: self.add_finding(row))
 
-                self.after(0, lambda: self.progress_var.set("Processing complete"))
+                self.after(0, lambda: self.progress_text.set("Processing complete"))
                 self.after(0, self.update_idletasks)
                 # Persist all collected data for later review
                 csv_path = os.path.join(output_dir, "results.csv")
