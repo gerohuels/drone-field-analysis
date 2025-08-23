@@ -1,8 +1,9 @@
 """Image analysis helpers using the OpenAI API.
 
-This module provides utilities for detecting bare soil areas and animals in
-drone footage.  The :func:`analyze_frame` function dynamically builds the prompt
-and tool definitions based on what the user wants to look for.
+This module provides utilities for detecting bare soil areas, animals, weeds,
+and stones in drone footage. The :func:`analyze_frame` function dynamically
+builds the prompt and tool definitions based on what the user wants to look
+for.
 """
 
 import base64
@@ -68,6 +69,18 @@ def report_weed(report: str, confidence: float, box_parameter: str) -> str:
         f"Box coordinates: {box_parameter}."
     )
     logger.info("\N{herb} %s", message)
+    return message
+
+
+def report_stone(report: str, confidence: float, box_parameter: str) -> str:
+    """Return a short description of a detected stone."""
+
+    message = (
+        f"Report: {report} \n"
+        f"Detection confidence is {confidence:.2f}. \n"
+        f"Box coordinates: {box_parameter}."
+    )
+    logger.info("\N{rock} %s", message)
     return message
 
 
@@ -166,6 +179,32 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
             "- **Weeds**: Detect the presence of weeds in this image. Weeds are characterized by small or clustered patches of green vegetation that visually contrast with the golden or beige wheat crop. Focus on: Green plant patches that are structurally or color-wise different from the wheat Vegetation in areas of exposed soil or near crop gaps Ignore: Dark soil patches without green coloration Shadows or flattened wheat that may appear darker but match wheat color/texture Dry/dead plant matter with no distinct green tones"
         )
 
+    if "stone" in look_for.lower():
+        tools.append(
+            {
+                "type": "function",
+                "function": {
+                    "name": "report_stone",
+                    "description": "Function to report stones in the field",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "report": {"type": "string"},
+                            "confidence": {"type": "number"},
+                            "box_parameter": {
+                                "type": "array",
+                                "items": {"type": "integer"},
+                            },
+                        },
+                        "required": ["report", "confidence", "box_parameter"],
+                    },
+                },
+            }
+        )
+        prompt_parts.append(
+            "- **Stones**: visible rocks or stones resting on the soil surface that stand out from the surrounding terrain."
+        )
+
     prompt_parts.append(
         "Return results by calling the appropriate function and always include the bounding box as [x1, y1, x2, y2]. Ensure the entire object is fully contained within the box. If multiple objects of the same type are present, draw a single box that tightly encloses all of them. Do not include any unrelated areas or background in the bounding box."
     )
@@ -233,6 +272,18 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
                         "confidence": args["confidence"],
                         "box_parameter": args.get("box_parameter"),
                         "description": report_weed(
+                            args["report"], args["confidence"], str(args.get("box_parameter"))
+                        ),
+                    }
+                )
+            elif tool_call.function.name == "report_stone" and args.get("confidence", 0) >= 0.85:
+                results.append(
+                    {
+                        "object_type": "stone",
+                        "report": args["report"],
+                        "confidence": args["confidence"],
+                        "box_parameter": args.get("box_parameter"),
+                        "description": report_stone(
                             args["report"], args["confidence"], str(args.get("box_parameter"))
                         ),
                     }

@@ -1,12 +1,12 @@
 # drone-field-analysis
 **This app is under development.**
 
-Drone Field Analysis makes it simple for growers to see problem spots in their fields. Just load a drone video and its GPS subtitles and the app will highlight bare soil areas, animals, or weeds. Results are shown as pictures and pins on a map for easy viewing.
+Drone Field Analysis makes it simple for growers to see problem spots in their fields. Just load a drone video and its GPS subtitles and the app will highlight bare soil areas, animals, weeds, or stones. Results are shown as pictures and pins on a map for easy viewing.
 
 
 ## Technical overview
 
-A Python application for analyzing agricultural drone footage to locate bare spots, animals, and weeds in fields. Detected areas are visualized on an interactive map.
+A Python application for analyzing agricultural drone footage to locate bare spots, animals, weeds, and stones in fields. Detected areas are visualized on an interactive map.
 
 **Main menu**
 
@@ -24,7 +24,7 @@ A Python application for analyzing agricultural drone footage to locate bare spo
 
 
 The application processes `.mp4` video footage of the field together with a matching `.srt` file containing GPS location data.
-It identifies bare soil patches or animals in the field and saves the matching frames with their coordinates to the `output/` directory.
+It identifies bare soil patches, animals, weeds, or stones in the field and saves the matching frames with their coordinates to the `output/` directory.
 All detections are also visualized on a field map for easy monitoring and analysis. Each marker opens a popup with an embedded preview image for quick review.
 
 The GUI presents a scrollable list of all findings. Clicking a thumbnail opens the full-size frame along with its GPS information.
@@ -35,11 +35,11 @@ Use the **Clear Output** button at any time to remove old results from the outpu
 Place your `.mp4` video and matching `.srt` file into the `footage/` folder before running the analysis.
 
 
-## AI bare spot, animal, and weed detection
+## AI bare spot, animal, weed, and stone detection
 
 The `drone_field_analysis/utils/data_processing.py` module demonstrates how to analyze the extracted frames using
 the OpenAI API. Each frame is sent to the `gpt-4o` model with instructions to look
-for large, clearly visible bare soil patches, animals, or weeds. If the model detects a
+for large, clearly visible bare soil patches, animals, weeds, or stones. If the model detects a
 matching object with high confidence it triggers the appropriate reporting function,
 printing the estimated location and confidence score.
 
@@ -65,7 +65,7 @@ python main.py
 1. Launch the program with the command above. The main window opens.
 2. Click **Browse** beside *MP4 File* and select your drone video.
 3. Click **Browse** beside *SRT File* and choose the matching subtitle file containing GPS data.
-4. Choose whether to search for *Bare spots*, *Animals*, or *Weeds* and press **Scan** to analyze each extracted frame.
+4. Choose whether to search for *Bare spots*, *Animals*, *Weeds*, or *Stones* and press **Scan** to analyze each extracted frame.
 5. Detected spots appear in the results list as image thumbnails.
 6. Click any thumbnail to view the full image with its GPS coordinates. The subtitle's raw GPS
    information is displayed automatically when available.
@@ -76,7 +76,7 @@ python main.py
 ## Button Guide
 
 - **Browse** – open a file dialog to select the MP4 footage or matching SRT subtitle file.
-- **Look For** – drop-down menu to pick whether to search for *Bare spots*, *Animals*, or *Weeds*.
+- **Look For** – drop-down menu to pick whether to search for *Bare spots*, *Animals*, *Weeds*, or *Stones*.
 - **Scan** – start the extraction and analysis process for every frame.
 - **Show on Map** – open the interactive map of all detections once scanning is complete.
 - **Show Flight Path** – toggle drawing the drone's route on the map.
@@ -99,7 +99,7 @@ The list below highlights the technical capabilities implemented by the applicat
 
 ### Dependencies
 
-- [OpenAI Python](https://github.com/openai/openai-python) - Access to the GPT models for bare spot, animal, and weed detection.
+- [OpenAI Python](https://github.com/openai/openai-python) - Access to the GPT models for bare spot, animal, weed, and stone detection.
 - [OpenCV](https://opencv.org/) - Extracts frames from the drone footage.
 - [pysrt](https://github.com/byroot/pysrt) - Parses subtitle files containing GPS coordinates.
 - [Pillow](https://python-pillow.org/) - Image loading and thumbnail generation.
