@@ -89,9 +89,10 @@ class DroneFieldGUI(tk.Tk):
             row=3, column=0, sticky="e", padx=5, pady=5
         )
         # The option menu allows users to specify what objects should be
-        # detected in each frame. Choices are bare spots, animals or weeds.
+        # detected in each frame. Choices are bare spots, animals, weeds or
+        # stones.
         self.look_for_var = tk.StringVar(value="Bare spots")
-        options = ["Bare spots", "Animals", "Weeds"]
+        options = ["Bare spots", "Animals", "Weeds", "Stones"]
         tk.OptionMenu(self, self.look_for_var, *options).grid(
             row=3, column=1, columnspan=2, sticky="w", padx=5, pady=5
         )
