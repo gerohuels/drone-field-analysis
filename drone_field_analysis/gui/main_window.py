@@ -4,15 +4,18 @@ import logging
 import threading
 import tkinter as tk
 
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, simpledialog
 from typing import cast
 import os
 import webbrowser
 import base64
 import shutil
+import smtplib
 
 import folium
 
+from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
 from PIL import Image, ImageTk, ImageDraw
 import pandas as pd
 
@@ -55,6 +58,7 @@ class DroneFieldGUI(tk.Tk):
         self.results_canvas = None
         self.results_container = None
         self.show_map_button = None
+        self.email_map_button = None
         self.progress_var = tk.StringVar(value="")
         self.progress_label = None
         self.create_widgets()
@@ -129,6 +133,14 @@ class DroneFieldGUI(tk.Tk):
             state="disabled",
         )
         self.show_map_button.grid(row=6, column=1, pady=10, padx=5)
+
+        self.email_map_button = tk.Button(
+            self,
+            text="Email Map",
+            command=self.email_map,
+            state="disabled",
+        )
+        self.email_map_button.grid(row=6, column=3, pady=10, padx=(5, 10))
 
         # Toggle whether the flight path polyline is drawn on the map
         self.show_path_var = tk.BooleanVar(value=True)
@@ -312,6 +324,37 @@ class DroneFieldGUI(tk.Tk):
         abs_map_path = os.path.abspath(output_map)
         webbrowser.open_new_tab(f"file://{abs_map_path}")
 
+    def email_map(self):
+        """Send the generated map HTML file to a user-provided email address."""
+        map_path = os.path.join(OUTPUT_DIR, "findings_map.html")
+        if not os.path.isfile(map_path):
+            messagebox.showerror("Map Missing", "Please generate the map first.")
+            return
+
+        recipient = simpledialog.askstring(
+            "Email Map", "Enter recipient email address:"
+        )
+        if not recipient:
+            return
+
+        try:
+            msg = MIMEMultipart()
+            msg["Subject"] = "Drone Field Analysis Map"
+            msg["From"] = "noreply@example.com"
+            msg["To"] = recipient
+            with open(map_path, "rb") as f:
+                part = MIMEApplication(f.read(), Name=os.path.basename(map_path))
+            part["Content-Disposition"] = (
+                f'attachment; filename="{os.path.basename(map_path)}"'
+            )
+            msg.attach(part)
+            with smtplib.SMTP("localhost") as server:
+                server.send_message(msg)
+            messagebox.showinfo("Email Sent", f"Map emailed to {recipient}.")
+        except Exception as exc:
+            logger.error("Failed to send email: %s", exc)
+            messagebox.showerror("Email Failed", str(exc))
+
     def add_flight_path(self, mymap):
         """Add a polyline showing the drone's path to ``mymap`` if enabled."""
         if not self.data.empty and self.show_path_var.get():
@@ -377,6 +420,8 @@ class DroneFieldGUI(tk.Tk):
 
             if self.show_map_button:
                 self.after(0, lambda: self.show_map_button.config(state="disabled"))
+            if self.email_map_button:
+                self.after(0, lambda: self.email_map_button.config(state="disabled"))
 
             output_dir = OUTPUT_DIR
             try:
@@ -439,6 +484,8 @@ class DroneFieldGUI(tk.Tk):
                 )
                 if self.show_map_button:
                     self.after(0, lambda: self.show_map_button.config(state="normal"))
+                if self.email_map_button:
+                    self.after(0, lambda: self.email_map_button.config(state="normal"))
             except Exception as exc:
                 self.after(0, lambda: messagebox.showerror("Error", str(exc)))
 
