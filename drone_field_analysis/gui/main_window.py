@@ -55,6 +55,7 @@ class DroneFieldGUI(tk.Tk):
         self.results_canvas = None
         self.results_container = None
         self.show_map_button = None
+        self.export_map_button = None
         self.progress_var = tk.StringVar(value="")
         self.progress_label = None
         self.create_widgets()
@@ -129,6 +130,14 @@ class DroneFieldGUI(tk.Tk):
             state="disabled",
         )
         self.show_map_button.grid(row=6, column=1, pady=10, padx=5)
+
+        self.export_map_button = tk.Button(
+            self,
+            text="Export Map",
+            command=self.export_map,
+            state="disabled",
+        )
+        self.export_map_button.grid(row=6, column=3, pady=10, padx=5)
 
         # Toggle whether the flight path polyline is drawn on the map
         self.show_path_var = tk.BooleanVar(value=True)
@@ -311,6 +320,27 @@ class DroneFieldGUI(tk.Tk):
 
         abs_map_path = os.path.abspath(output_map)
         webbrowser.open_new_tab(f"file://{abs_map_path}")
+        if self.export_map_button:
+            self.export_map_button.config(state="normal")
+
+    def export_map(self):
+        """Export the generated map HTML to a chosen file."""
+        map_path = os.path.join(OUTPUT_DIR, "findings_map.html")
+        if not os.path.exists(map_path):
+            messagebox.showinfo("Map Not Found", "No map has been generated yet.")
+            return
+        dest = filedialog.asksaveasfilename(
+            defaultextension=".html",
+            filetypes=[("HTML files", "*.html")],
+            initialfile="findings_map.html",
+        )
+        if dest:
+            try:
+                shutil.copy(map_path, dest)
+                messagebox.showinfo("Export Complete", f"Map exported to '{dest}'")
+            except Exception as exc:
+                logger.error("Failed to export map: %s", exc)
+                messagebox.showerror("Export Failed", f"Failed to export map: {exc}")
 
     def add_flight_path(self, mymap):
         """Add a polyline showing the drone's path to ``mymap`` if enabled."""
@@ -358,6 +388,8 @@ class DroneFieldGUI(tk.Tk):
         messagebox.showinfo(
             "Output Cleared", f"All contents of '{OUTPUT_DIR}' have been deleted."
         )
+        if self.export_map_button:
+            self.export_map_button.config(state="disabled")
 
     def scan(self):
         """Run frame extraction and bare spot detection in a background thread."""
@@ -377,6 +409,8 @@ class DroneFieldGUI(tk.Tk):
 
             if self.show_map_button:
                 self.after(0, lambda: self.show_map_button.config(state="disabled"))
+            if self.export_map_button:
+                self.after(0, lambda: self.export_map_button.config(state="disabled"))
 
             output_dir = OUTPUT_DIR
             try:

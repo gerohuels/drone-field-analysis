@@ -70,7 +70,8 @@ python main.py
 6. Click any thumbnail to view the full image with its GPS coordinates. The subtitle's raw GPS
    information is displayed automatically when available.
 7. When scanning finishes, press **Show on Map** to open a browser displaying all detections. Enable *Show Flight Path* to visualize the drone's route.
-8. Press **Clear Output** to delete all extracted frames and results once you no longer need them.
+8. Press **Export Map** to save the generated map as an HTML file.
+9. Press **Clear Output** to delete all extracted frames and results once you no longer need them.
 
 
 ## Button Guide
@@ -79,6 +80,7 @@ python main.py
 - **Look For** – drop-down menu to pick whether to search for *Bare spots*, *Animals*, or *Weeds*.
 - **Scan** – start the extraction and analysis process for every frame.
 - **Show on Map** – open the interactive map of all detections once scanning is complete.
+- **Export Map** – save the generated map to an HTML file.
 - **Show Flight Path** – toggle drawing the drone's route on the map.
 - **Clear Output** – delete everything in the output folder after confirmation.
 - Clicking a **thumbnail** in the results list opens the full-sized image with its GPS information.
