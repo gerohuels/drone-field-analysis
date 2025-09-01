@@ -1,5 +1,4 @@
 # drone-field-analysis
-**This app is under development.**
 
 Drone Field Analysis makes it simple for growers to see problem spots in their fields. Just load a drone video and its GPS subtitles and the app will highlight bare soil areas, animals, or weeds. Results are shown as pictures and pins on a map for easy viewing.
 
