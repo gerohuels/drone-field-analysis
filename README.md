@@ -34,7 +34,7 @@ Use the **Clear Output** button at any time to remove old results from the outpu
 Place your `.mp4` video and matching `.srt` file into the `footage/` folder before running the analysis.
 
 
-## AI bare spot, animal, and weed detection
+## AI powerd bare spot, animal, and weed detection
 
 The `drone_field_analysis/utils/data_processing.py` module demonstrates how to analyze the extracted frames using
 the OpenAI API. Each frame is sent to the `gpt-4o` model with instructions to look
