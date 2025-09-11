@@ -72,7 +72,7 @@ python main.py
 8. Press **Clear Output** to delete all extracted frames and results once you no longer need them.
 
 
-## Button Guide
+## User Guide
 
 - **Browse** – open a file dialog to select the MP4 footage or matching SRT subtitle file.
 - **Look For** – drop-down menu to pick whether to search for *Bare spots*, *Animals*, or *Weeds*.
