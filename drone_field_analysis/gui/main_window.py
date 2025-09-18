@@ -32,6 +32,8 @@ class DroneFieldGUI(tk.Tk):
         self.title("Drone Field Analyzer")
         self.mp4_path = tk.StringVar()
         self.srt_path = tk.StringVar()
+        self.mp4_path.trace_add("write", lambda *args: self.update_scan_button())
+        self.srt_path.trace_add("write", lambda *args: self.update_scan_button())
         # Store metadata and detection results for each extracted frame
         self.data = pd.DataFrame(
             columns=[
@@ -55,6 +57,7 @@ class DroneFieldGUI(tk.Tk):
         self.results_canvas = None
         self.results_container = None
         self.show_map_button = None
+        self.scan_button = None
         self.progress_var = tk.StringVar(value="")
         self.progress_label = None
         self.create_widgets()
@@ -65,41 +68,47 @@ class DroneFieldGUI(tk.Tk):
             self, text="Drone Field Analyzer", font=("Helvetica", 16, "bold")
         ).grid(row=0, column=0, columnspan=3, pady=10)
 
-        tk.Label(self, text="MP4 File:").grid(
+        file_frame = tk.LabelFrame(self, text="Input Files")
+        file_frame.grid(row=1, column=0, columnspan=3, padx=10, pady=5, sticky="ew")
+        file_frame.columnconfigure(1, weight=1)
+
+        tk.Label(file_frame, text="MP4 File:").grid(
+            row=0, column=0, sticky="e", padx=5, pady=5
+        )
+        tk.Entry(file_frame, width=40, textvariable=self.mp4_path).grid(
+            row=0, column=1, padx=5, pady=5, sticky="ew"
+        )
+        tk.Button(file_frame, text="Browse", command=self.browse_mp4).grid(
+            row=0, column=2, padx=5, pady=5
+        )
+
+        tk.Label(file_frame, text="SRT File:").grid(
             row=1, column=0, sticky="e", padx=5, pady=5
         )
-        tk.Entry(self, width=40, textvariable=self.mp4_path).grid(
-            row=1, column=1, padx=5, pady=5
+        tk.Entry(file_frame, width=40, textvariable=self.srt_path).grid(
+            row=1, column=1, padx=5, pady=5, sticky="ew"
         )
-        tk.Button(self, text="Browse", command=self.browse_mp4).grid(
+        tk.Button(file_frame, text="Browse", command=self.browse_srt).grid(
             row=1, column=2, padx=5, pady=5
         )
 
-        tk.Label(self, text="SRT File:").grid(
+        tk.Label(file_frame, text="Look For:").grid(
             row=2, column=0, sticky="e", padx=5, pady=5
-        )
-        tk.Entry(self, width=40, textvariable=self.srt_path).grid(
-            row=2, column=1, padx=5, pady=5
-        )
-        tk.Button(self, text="Browse", command=self.browse_srt).grid(
-            row=2, column=2, padx=5, pady=5
-        )
-
-        tk.Label(self, text="Look For:").grid(
-            row=3, column=0, sticky="e", padx=5, pady=5
         )
         # The option menu allows users to specify what objects should be
         # detected in each frame. Choices are bare spots, animals or weeds.
         self.look_for_var = tk.StringVar(value="Bare spots")
         options = ["Bare spots", "Animals", "Weeds"]
-        tk.OptionMenu(self, self.look_for_var, *options).grid(
-            row=3, column=1, columnspan=2, sticky="w", padx=5, pady=5
+        tk.OptionMenu(file_frame, self.look_for_var, *options).grid(
+            row=2, column=1, columnspan=2, sticky="w", padx=5, pady=5
         )
         # Action buttons are placed at the bottom of the window. The Scan,
         # Show on Map and Clear Output buttons share the same row so users can
         # quickly start a scan, view the map and remove old results.
-        self.scan_button = tk.Button(self, text="Scan", command=self.scan)
-        self.scan_button.grid(row=6, column=0, pady=10, padx=(10, 5))
+        self.scan_button = tk.Button(
+            self, text="Scan", command=self.scan, state="disabled"
+        )
+        self.scan_button.grid(row=3, column=0, pady=10, padx=(10, 5))
         self.results_canvas = tk.Canvas(self, width=400, height=200)
         scrollbar = tk.Scrollbar(
             self, orient="vertical", command=self.results_canvas.yview
@@ -107,9 +116,9 @@ class DroneFieldGUI(tk.Tk):
         self.results_canvas.configure(yscrollcommand=scrollbar.set)
 
         self.results_canvas.grid(
-            row=5, column=0, columnspan=3, padx=10, pady=5, sticky="nsew"
+            row=2, column=0, columnspan=3, padx=10, pady=5, sticky="nsew"
         )
-        scrollbar.grid(row=5, column=3, sticky="ns")
+        scrollbar.grid(row=2, column=3, sticky="ns")
 
         self.results_container = tk.Frame(self.results_canvas)
         self.results_canvas.create_window(
@@ -128,7 +137,7 @@ class DroneFieldGUI(tk.Tk):
             command=self.show_map,
             state="disabled",
         )
-        self.show_map_button.grid(row=6, column=1, pady=10, padx=5)
+        self.show_map_button.grid(row=3, column=1, pady=10, padx=5)
 
         # Toggle whether the flight path polyline is drawn on the map
         self.show_path_var = tk.BooleanVar(value=True)
@@ -136,17 +145,17 @@ class DroneFieldGUI(tk.Tk):
             self,
             text="Show Flight Path",
             variable=self.show_path_var,
-        ).grid(row=7, column=0, columnspan=3)
+        ).grid(row=4, column=0, columnspan=3)
 
         # Label that displays extraction and processing progress
         self.progress_label = tk.Label(self, textvariable=self.progress_var)
-        self.progress_label.grid(row=8, column=0, columnspan=3, pady=(0, 10))
+        self.progress_label.grid(row=5, column=0, columnspan=3, pady=(0, 10))
 
         tk.Button(
             self,
             text="Clear Output",
             command=self.clear_output,
-        ).grid(row=6, column=2, pady=10, padx=(5, 10))
+        ).grid(row=3, column=2, pady=10, padx=(5, 10))
 
     def browse_mp4(self):
         """Prompt the user to select an MP4 file."""
@@ -159,6 +168,12 @@ class DroneFieldGUI(tk.Tk):
         path = filedialog.askopenfilename(filetypes=[("SRT files", "*.srt")])
         if path:
             self.srt_path.set(path)
+
+    def update_scan_button(self) -> None:
+        """Enable the scan button when both input files are selected."""
+        state = "normal" if self.mp4_path.get() and self.srt_path.get() else "disabled"
+        if self.scan_button:
+            self.scan_button.config(state=state)
 
 
     def show_full_image(
