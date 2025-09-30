@@ -7,6 +7,17 @@ Drone Field Analysis makes it simple for growers to see problem spots in their f
 
 A Python application for analyzing agricultural drone footage to locate bare spots, animals, and weeds in fields. Detected areas are visualized on an interactive map.
 
+## Coming Diagram
+
+```mermaid
+flowchart TD
+    A[Load drone MP4 and matching SRT files] --> B[Extract frames once per second]
+    B --> C[Align frames with GPS metadata]
+    C --> D[Analyze frames with GPT-4o for bare spots, animals, or weeds]
+    D --> E[Store detections, images, and metadata]
+    E --> F[Present results in GUI and interactive map]
+```
+
 **Main menu**
 
 <img width="555" height="555" alt="Screenshot 2025-07-23 at 23 12 57" src="https://github.com/user-attachments/assets/2b1ea278-5c71-4e49-878f-574e7439a24f" />
