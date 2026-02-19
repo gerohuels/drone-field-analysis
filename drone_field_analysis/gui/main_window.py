@@ -48,6 +48,8 @@ class DroneFieldGUI(tk.Tk):
                 "boxed_image_path",
             ]
         )
+        # Store one row per detected object so reports can include all findings.
+        self.findings = pd.DataFrame(columns=self.data.columns)
 
         # Hold references to thumbnail images to prevent garbage collection
         self.result_images = []
@@ -89,9 +91,9 @@ class DroneFieldGUI(tk.Tk):
             row=3, column=0, sticky="e", padx=5, pady=5
         )
         # The option menu allows users to specify what objects should be
-        # detected in each frame. Choices are bare spots, animals or weeds.
+        # detected in each frame. Users can also run all detectors at once.
         self.look_for_var = tk.StringVar(value="Bare spots")
-        options = ["Bare spots", "Animals", "Weeds"]
+        options = ["Bare spots", "Animals", "Weeds", "Detect all"]
         tk.OptionMenu(self, self.look_for_var, *options).grid(
             row=3, column=1, columnspan=2, sticky="w", padx=5, pady=5
         )
@@ -245,11 +247,17 @@ class DroneFieldGUI(tk.Tk):
         else:
             frame.pack(fill="x", padx=5, pady=5)
 
+    def clear_findings_view(self):
+        """Remove all currently displayed findings from the list."""
+        self.result_images.clear()
+        for child in self.results_container.winfo_children():
+            child.destroy()
+
     def show_map(self):
         """Open a browser map visualizing all detections."""
 
         # Only keep rows where an object was detected
-        found_df = self.data.dropna(subset=["object_type"])
+        found_df = self.findings.dropna(subset=["object_type"])
         if found_df.empty:
             messagebox.showinfo("No Findings", "No findings to display on the map.")
             return
@@ -382,6 +390,8 @@ class DroneFieldGUI(tk.Tk):
             try:
                 # Step 1: Extract frames and collect GPS metadata
                 self.data = extract_frames_with_gps(mp4, srt, output_dir)
+                self.findings = pd.DataFrame(columns=self.data.columns)
+                self.after(0, self.clear_findings_view)
                 total_frames = len(self.data)
                 self.after(0, lambda: self.progress_var.set(f"Extracted {total_frames} frames"))
                 self.after(0, self.update_idletasks)
@@ -399,37 +409,43 @@ class DroneFieldGUI(tk.Tk):
                     results = analyze_frame(row["image_path"], look_for)
                     if not results:
                         continue
-                    result = results[0]
-                    # Store analysis results back into the main DataFrame
-                    self.data.at[idx, "object_type"] = result.get("object_type")
-                    self.data.at[idx, "report"] = result.get("report") or result.get("species")
-                    self.data.at[idx, "description"] = result.get("description")
-                    self.data.at[idx, "confidence"] = result.get("confidence")
-                    self.data.at[idx, "box_parameter"] = result.get("box_parameter")
-                    # Path to an image with the bounding box drawn
-                    boxed_path = row["image_path"]
-                    if result.get("box_parameter"):
-                        try:
-                            img = Image.open(row["image_path"])
-                            draw = ImageDraw.Draw(img)
-                            draw.rectangle(
-                                tuple(result["box_parameter"]), outline="blue", width=5
-                            )
-                            boxed_path = row["image_path"].rsplit(".", 1)[0] + "_boxed.jpg"
-                            img.save(boxed_path)
-                        except Exception as e:
-                            logger.error(
-                                "Failed to draw box on %s: %s", row["image_path"], e
-                            )
-                            boxed_path = row["image_path"]
-                    self.data.at[idx, "boxed_image_path"] = boxed_path
-                    self.after(0, lambda row=self.data.loc[idx]: self.add_finding(row))
+                    for result_idx, result in enumerate(results):
+                        finding = row.copy()
+                        finding["object_type"] = result.get("object_type")
+                        finding["report"] = result.get("report") or result.get("species")
+                        finding["description"] = result.get("description")
+                        finding["confidence"] = result.get("confidence")
+                        finding["box_parameter"] = result.get("box_parameter")
+
+                        # Path to an image with the bounding box drawn
+                        boxed_path = row["image_path"]
+                        if result.get("box_parameter"):
+                            try:
+                                img = Image.open(row["image_path"])
+                                draw = ImageDraw.Draw(img)
+                                draw.rectangle(
+                                    tuple(result["box_parameter"]), outline="blue", width=5
+                                )
+                                boxed_path = (
+                                    row["image_path"].rsplit(".", 1)[0]
+                                    + f"_boxed_{idx}_{result_idx}.jpg"
+                                )
+                                img.save(boxed_path)
+                            except Exception as e:
+                                logger.error(
+                                    "Failed to draw box on %s: %s", row["image_path"], e
+                                )
+                                boxed_path = row["image_path"]
+
+                        finding["boxed_image_path"] = boxed_path
+                        self.findings.loc[len(self.findings)] = finding
+                        self.after(0, lambda row=finding.copy(): self.add_finding(row))
 
                 self.after(0, lambda: self.progress_var.set("Processing complete"))
                 self.after(0, self.update_idletasks)
                 # Persist all collected data for later review
                 csv_path = os.path.join(output_dir, "results.csv")
-                self.data.to_csv(csv_path, index=False)
+                self.findings.to_csv(csv_path, index=False)
                 self.after(
                     0,
                     lambda: messagebox.showinfo(

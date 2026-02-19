@@ -93,7 +93,10 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
         "Analyze this frame and identify any of the following objects:"
     ]  # Text instructions passed to the model
 
-    if "bare spot" in look_for.lower():
+    look_for_lower = look_for.lower()
+    detect_all = "all" in look_for_lower
+
+    if detect_all or "bare spot" in look_for_lower:
         # Allow the model to call ``report_bare_spot`` when a patch of bare soil
         # is detected in the frame
         tools.append(
@@ -118,7 +121,7 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
             "- **Bare spots**: Bare spots: Large, clearly visible patches of exposed soil with no signs of crop growth. These areas appear as uncovered earth — typically light brown or tan — with no green vegetation, leaves, or canopy overhead. A valid bare spot must be at least 5x5 cm in real-world size, fully free from crops, shadow, debris, or partial coverage. The soil surface should be unobstructed and distinctly visible from above."
         )
 
-    if "animal" in look_for.lower():
+    if detect_all or "animal" in look_for_lower:
         # Similarly expose ``report_animal`` for animal sightings
         tools.append(
             {
@@ -143,7 +146,7 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
             "- **Animals**: clearly visible animals like deer, birds, or rabbits."
         )
 
-    if "weed" in look_for.lower():
+    if detect_all or "weed" in look_for_lower:
         tools.append(
             {
                 "type": "function",
@@ -219,8 +222,14 @@ def analyze_frame(image_path: str, look_for: str = "bare spot"):
                 results.append(
                     {
                         "object_type": "animal",
+                        "report": f"{args['species']}: {args['description']}",
                         "species": args["species"],
-                        "description": args["description"],
+                        "description": report_animal(
+                            args["species"],
+                            args["description"],
+                            args["confidence"],
+                            str(args.get("box_parameter")),
+                        ),
                         "confidence": args["confidence"],
                         "box_parameter": args.get("box_parameter"),
                     }
